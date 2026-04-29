@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard DOI Inventory — PT Eka Jaya Internasional</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Chart.js v4.4.1 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<style>
+/* ============================================================
+   ROOT TOKENS — Eka Jaya Internasional Design System
+   ============================================================ */
+:root {
+  /* Brand */
+  --navy:        #0B1D35;
+  --navy-soft:   #142a4a;
+  --navy-line:   #1f3559;
+
+  /* Surfaces */
+  --bg-body:     #F0F4FA;
+  --bg-card:     #FFFFFF;
+  --bg-soft:     #F7F9FD;
+  --border:      #E4EAF3;
+  --border-soft: #EEF2F8;
+
+  /* Text */
+  --text-1:      #0B1D35;
+  --text-2:      #4A5A75;
+  --text-3:      #8595B0;
+  --text-inv:    #FFFFFF;
+
+  /* Palette */
+  --blue:        #2A6DF4;
+  --blue-soft:   #E8F0FE;
+  --teal:        #0EA5A4;   /* Teal Bitung */
+  --teal-soft:   #DDF4F3;
+  --purple:      #7C5CFA;
+  --purple-soft: #ECE6FF;
+  --amber:       #F5A524;
+  --amber-soft:  #FFF1D6;
+  --rose:        #F43F5E;
+  --rose-soft:   #FFE4E8;
+  --green:       #14B86A;
+  --green-soft:  #DDF6E7;
+
+  /* Shadow */
+  --shadow-sm:   0 1px 2px rgba(11,29,53,.04);
+  --shadow-md:   0 4px 14px rgba(11,29,53,.06);
+  --shadow-lg:   0 12px 30px rgba(11,29,53,.08);
+
+  /* Layout */
+  --sidebar-w:   220px;
+  --topbar-h:    60px;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  /* Type */
+  --font-text:  'DM Sans', system-ui, sans-serif;
+  --font-num:   'DM Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--font-text);
+  background: var(--bg-body);
+  color: var(--text-1);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--navy);
+  color: var(--text-inv);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  border-right: 1px solid rgba(255,255,255,.04);
+}
+
+.sidebar-brand {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--navy-line);
+}
+.brand-logo-wrap {
+  background: #fff;
+  border-radius: 10px;
+  height: 44px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  flex: 1;
+}
+/* Logo SVG mimicking the Eka Jaya Internasional brand mark */
+.brand-logo-wrap svg,
+.brand-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+.brand-meta { display: none; } /* compact when logo wrapper takes full width */
+
+.sidebar-section {
+  padding: 18px 14px 6px;
+}
+.sidebar-section-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  color: rgba(255,255,255,.42);
+  text-transform: uppercase;
+  padding: 0 8px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  margin: 1px 0;
+  border-radius: 8px;
+  color: rgba(255,255,255,.78);
+  font-size: 13.2px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+  position: relative;
+}
+.nav-item:hover { background: rgba(255,255,255,.05); color: #fff; }
+.nav-item.active {
+  background: linear-gradient(135deg, var(--blue) 0%, #4F86FF 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(42,109,244,.32);
+}
+.nav-item.active .nav-dot { background: #fff; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .9; }
+
+.nav-badge {
+  margin-left: auto;
+  background: rgba(244,63,94,.92);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-family: var(--font-num);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-top: 1px solid var(--navy-line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--blue) 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 600; font-size: 12px;
+}
+.user-info { flex: 1; line-height: 1.25; }
+.user-name { font-size: 12.5px; font-weight: 600; color: #fff; }
+.user-role { font-size: 11px; color: rgba(255,255,255,.55); }
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky;
+  top: 0;
+  height: var(--topbar-h);
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  z-index: 30;
+  box-shadow: 0 1px 0 rgba(11,29,53,.02);
+}
+.page-title {
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -.01em;
+}
+.page-title small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-weight: 400;
+  margin-top: 1px;
+  letter-spacing: 0;
+}
+
+.topbar-spacer { flex: 1; }
+
+/* Filter group */
+.filter-group { display: flex; gap: 8px; align-items: center; }
+.filter {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.filter:hover { border-color: #BFD0E9; background: var(--bg-soft); }
+.filter svg { width: 13px; height: 13px; opacity: .7; }
+.filter strong { color: var(--text-1); font-weight: 600; }
+
+/* Plant pills */
+.plant-pills {
+  display: flex; gap: 4px;
+  background: var(--bg-soft);
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+}
+.pill {
+  height: 28px; padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-2);
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all .18s ease;
+  position: relative;
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); }
+.pill:hover { color: var(--text-1); }
+.pill.active {
+  background: #fff;
+  color: var(--text-1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.pill[data-plant="all"].active      { color: var(--blue);   border-color: var(--blue-soft);   }
+.pill[data-plant="all"].active      .dot { background: var(--blue);   }
+.pill[data-plant="bitung"].active   { color: var(--teal);   border-color: var(--teal-soft);   }
+.pill[data-plant="bitung"].active   .dot { background: var(--teal);   }
+.pill[data-plant="sangiang"].active { color: var(--purple); border-color: var(--purple-soft); }
+.pill[data-plant="sangiang"].active .dot { background: var(--purple); }
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff;
+  color: var(--text-2);
+  cursor: pointer;
+  position: relative;
+}
+.icon-btn:hover { border-color: #BFD0E9; color: var(--text-1); }
+.icon-btn svg { width: 15px; height: 15px; }
+.icon-btn .ping {
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px;
+  background: var(--rose);
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+.content {
+  padding: 22px 28px 40px;
+  max-width: 1600px;
+  width: 100%;
+}
+
+/* Period banner */
+.period-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 12px 18px;
+  background: linear-gradient(95deg, #0B1D35 0%, #1B3768 100%);
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+.period-banner::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(42,109,244,.32) 0%, transparent 65%);
+  pointer-events: none;
+}
+.period-banner-left { display: flex; align-items: center; gap: 14px; z-index: 1; }
+.period-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  color: #6FB1FF;
+}
+.period-icon svg { width: 18px; height: 18px; }
+.period-text-main { font-size: 14px; font-weight: 600; }
+.period-text-sub  { font-size: 11.5px; color: rgba(255,255,255,.62); margin-top: 2px; }
+.period-actions { display: flex; gap: 8px; z-index: 1; }
+.period-btn {
+  height: 32px; padding: 0 14px;
+  border-radius: 7px;
+  font-size: 12px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #fff;
+  transition: background .15s;
+}
+.period-btn:hover { background: rgba(255,255,255,.16); }
+.period-btn.primary { background: var(--blue); border-color: var(--blue); }
+.period-btn.primary:hover { background: #1E5FE0; }
+.period-btn svg { width: 13px; height: 13px; }
+
+/* ============================================================
+   KPI GRID — 4 columns
+   ============================================================ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--blue);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card[data-accent="blue"]::before   { background: var(--blue);   }
+.kpi-card[data-accent="teal"]::before   { background: var(--teal);   }
+.kpi-card[data-accent="amber"]::before  { background: var(--amber);  }
+.kpi-card[data-accent="rose"]::before   { background: var(--rose);   }
+.kpi-card[data-accent="green"]::before  { background: var(--green);  }
+.kpi-card[data-accent="purple"]::before { background: var(--purple); }
+
+.kpi-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.kpi-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.kpi-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-icon svg { width: 15px; height: 15px; }
+.kpi-card[data-accent="blue"]   .kpi-icon { background: var(--blue-soft);   color: var(--blue);   }
+.kpi-card[data-accent="teal"]   .kpi-icon { background: var(--teal-soft);   color: var(--teal);   }
+.kpi-card[data-accent="amber"]  .kpi-icon { background: var(--amber-soft);  color: var(--amber);  }
+.kpi-card[data-accent="rose"]   .kpi-icon { background: var(--rose-soft);   color: var(--rose);   }
+.kpi-card[data-accent="green"]  .kpi-icon { background: var(--green-soft);  color: var(--green);  }
+.kpi-card[data-accent="purple"] .kpi-icon { background: var(--purple-soft); color: var(--purple); }
+
+.kpi-value {
+  font-family: var(--font-num);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.kpi-value .unit { font-size: 13px; color: var(--text-3); margin-left: 4px; font-weight: 400; }
+
+.kpi-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-soft);
+}
+.kpi-trend {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11.5px; font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.kpi-trend.up   { background: var(--green-soft); color: var(--green); }
+.kpi-trend.down { background: var(--rose-soft);  color: var(--rose);  }
+.kpi-trend.flat { background: #EEF2F8;            color: var(--text-2); }
+.kpi-trend svg { width: 11px; height: 11px; }
+.kpi-sub { font-size: 11px; color: var(--text-3); }
+
+
+/* Dual-cell KPI (Slow Move & Fast Move) */
+.kpi-card.kpi-dual .kpi-dual-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+}
+.kpi-dual-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.kpi-dual-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.kpi-dual-value {
+  font-family: var(--font-num);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.kpi-dual-value .unit {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-left: 3px;
+  font-weight: 400;
+  font-family: var(--font-text);
+}
+.kpi-dual-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+/* Mini sparkline */
+.kpi-spark {
+  position: absolute;
+  right: 14px; bottom: 50px;
+  width: 78px; height: 26px;
+  opacity: .9;
+}
+
+/* ============================================================
+   CHART GRID
+   ============================================================ */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.chart-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 20px 20px;
+  position: relative;
+}
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--blue);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.chart-card[data-accent="teal"]::before   { background: var(--teal); }
+.chart-card[data-accent="purple"]::before { background: var(--purple); }
+.chart-card[data-accent="amber"]::before  { background: var(--amber); }
+.chart-card[data-accent="rose"]::before   { background: var(--rose); }
+.chart-card[data-accent="green"]::before  { background: var(--green); }
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.chart-title-block { line-height: 1.3; }
+.chart-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-1);
+  letter-spacing: -.005em;
+}
+.chart-sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+.chart-tabs { display: flex; gap: 4px; }
+.chart-tab {
+  height: 26px; padding: 0 10px;
+  border-radius: 6px;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--text-3);
+  background: transparent;
+}
+.chart-tab:hover { color: var(--text-1); }
+.chart-tab.active { background: var(--bg-soft); color: var(--text-1); }
+
+.chart-canvas-wrap { position: relative; height: 280px; }
+.chart-canvas-wrap.tall { height: 320px; }
+.chart-canvas-wrap.short { height: 240px; }
+
+/* Legend */
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-soft);
+}
+.legend-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--text-2);
+}
+.legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+
+/* DOI Bands display next to gauge */
+.doi-bands {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.band-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  font-size: 12px;
+}
+.band-row .band-label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.band-row .band-dot { width: 8px; height: 8px; border-radius: 3px; }
+.band-row .band-count { font-family: var(--font-num); font-weight: 600; color: var(--text-1); }
+.band-row .band-pct { font-family: var(--font-num); font-size: 11px; color: var(--text-3); margin-left: 6px; }
+
+/* ============================================================
+   TABLE — Slow & Fast Movers
+   ============================================================ */
+.table-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  position: relative;
+  overflow: hidden;
+}
+.table-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--rose);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.table-card[data-accent="green"]::before { background: var(--green); }
+
+.table-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px;
+}
+.table-actions { display: flex; gap: 6px; align-items: center; }
+.search-input {
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0 10px 0 30px;
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--bg-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238595B0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/></svg>") no-repeat 9px center;
+  width: 160px;
+  outline: none;
+  transition: border-color .15s;
+}
+.search-input:focus { border-color: var(--blue); background-color: #fff; }
+
+.t-scroll { overflow-x: auto; }
+.t {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.t thead th {
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 8px 14px;
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+.t thead th.right { text-align: right; }
+.t tbody td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+  color: var(--text-2);
+}
+.t tbody tr:last-child td { border-bottom: none; }
+.t tbody tr:hover { background: var(--bg-soft); }
+.t .right { text-align: right; }
+.t .sku-code {
+  font-family: var(--font-num);
+  font-weight: 500;
+  color: var(--text-1);
+  font-size: 11.5px;
+}
+.t .sku-name { color: var(--text-1); font-weight: 500; }
+.t .sku-meta { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.tag.rose   { background: var(--rose-soft);   color: var(--rose);   }
+.tag.amber  { background: var(--amber-soft);  color: #B5750E;       }
+.tag.green  { background: var(--green-soft);  color: var(--green);  }
+.tag.blue   { background: var(--blue-soft);   color: var(--blue);   }
+.tag.teal   { background: var(--teal-soft);   color: var(--teal);   }
+.tag.purple { background: var(--purple-soft); color: var(--purple); }
+.tag.gray   { background: #EEF2F8;            color: var(--text-2); }
+
+.doi-bar {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 120px;
+}
+.doi-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--border-soft);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.doi-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--blue);
+}
+.doi-bar-fill.rose  { background: var(--rose);  }
+.doi-bar-fill.amber { background: var(--amber); }
+.doi-bar-fill.green { background: var(--green); }
+.doi-bar-val {
+  font-family: var(--font-num);
+  font-weight: 600;
+  font-size: 11.5px;
+  color: var(--text-1);
+  min-width: 30px;
+  text-align: right;
+}
+
+.action-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  transition: background .15s;
+}
+.action-btn:hover { background: #D1E0FC; }
+.action-btn svg { width: 11px; height: 11px; }
+
+.table-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--bg-soft);
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.pager { display: flex; gap: 4px; align-items: center; }
+.pager-btn {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 11.5px;
+  font-family: var(--font-num);
+  color: var(--text-2);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pager-btn:hover { background: var(--bg-soft); color: var(--text-1); }
+.pager-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* ============================================================
+   ALERT STRIP (recommendations)
+   ============================================================ */
+.alert-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.alert {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+.alert::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--rose);
+}
+.alert[data-tone="amber"]::before { background: var(--amber); }
+.alert[data-tone="blue"]::before  { background: var(--blue); }
+.alert[data-tone="green"]::before { background: var(--green); }
+
+.alert-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--rose-soft);
+  color: var(--rose);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.alert[data-tone="amber"] .alert-icon { background: var(--amber-soft); color: #B5750E; }
+.alert[data-tone="blue"]  .alert-icon { background: var(--blue-soft);  color: var(--blue); }
+.alert[data-tone="green"] .alert-icon { background: var(--green-soft); color: var(--green); }
+.alert-icon svg { width: 14px; height: 14px; }
+
+.alert-body { flex: 1; line-height: 1.4; }
+.alert-title { font-size: 12.5px; font-weight: 600; color: var(--text-1); }
+.alert-msg   { font-size: 11.5px; color: var(--text-2); margin-top: 2px; }
+.alert-cta {
+  font-size: 11px; font-weight: 600;
+  color: var(--blue);
+  margin-top: 6px;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 1280px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-grid { grid-template-columns: 1fr; }
+  .chart-grid-2 { grid-template-columns: 1fr; }
+  .table-grid { grid-template-columns: 1fr; }
+  .alert-strip { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-100%); }
+  .content { padding: 16px; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 14px; gap: 10px; flex-wrap: wrap; height: auto; padding: 10px 14px; }
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C9D4E5; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #A9B8CF; }
+</style>
+</head>
+<body>
+
+<!-- ==========================================================
+     SIDEBAR
+     ========================================================== -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo-wrap">
+      <img src="data:image/png;base64,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" alt="PT Eka Jaya Internasional" />
+    </div>
+  </div>
+
+  <nav class="sidebar-section">
+    <div class="sidebar-section-title">Dashboard</div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </a>
+    <a class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-7"/></svg>
+      DOI Inventory
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m7.5 4.27 9 5.15"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>
+      Stock Position
+    </a>
+  </nav>
+
+  <nav class="sidebar-section">
+    <div class="sidebar-section-title">Analisis</div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Slow Movers
+      <span class="nav-badge">23</span>
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Fast Movers
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Aging Stock
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8 12 14.7 8 10.7 4 14.7"/></svg>
+      Forecast
+    </a>
+  </nav>
+
+  <nav class="sidebar-section">
+    <div class="sidebar-section-title">Laporan</div>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Stock Report
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Movement
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Anomaly Log
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-avatar">RA</div>
+    <div class="user-info">
+      <div class="user-name">Rendy Aditya</div>
+      <div class="user-role">Supply Analyst</div>
+    </div>
+    <button class="icon-btn" style="background:transparent;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:28px;height:28px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ==========================================================
+     MAIN
+     ========================================================== -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="page-title">
+      DOI Inventory
+      <small>Days of Inventory · Slow & Fast Mover Analysis</small>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="filter-group">
+      <button class="filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Periode: <strong>April 2026</strong>
+      </button>
+      <button class="filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Kategori: <strong>Semua</strong>
+      </button>
+    </div>
+
+    <div class="plant-pills">
+      <button class="pill active" data-plant="all"><span class="dot"></span>All Factory</button>
+      <button class="pill" data-plant="bitung"><span class="dot"></span>Bitung</button>
+      <button class="pill" data-plant="sangiang"><span class="dot"></span>Sangiang</button>
+    </div>
+
+    <button class="icon-btn" title="Notifikasi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <span class="ping"></span>
+    </button>
+
+    <button class="icon-btn" title="Refresh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- Period banner -->
+    <div class="period-banner">
+      <div class="period-banner-left">
+        <div class="period-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m7.5 4.27 9 5.15"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>
+        </div>
+        <div>
+          <div class="period-text-main">All Factory — Periode 1 s/d 29 April 2026</div>
+          <div class="period-text-sub">Data per 29 April 2026, 08:30 WIB · Sinkronisasi terakhir 5 menit yang lalu</div>
+        </div>
+      </div>
+      <div class="period-actions">
+        <button class="period-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Excel
+        </button>
+        <button class="period-btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Action Items (5)
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert strip -->
+    <div class="alert-strip">
+      <div class="alert" data-tone="rose">
+        <div class="alert-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="alert-body">
+          <div class="alert-title">7 SKU mendekati kategori Dead Stock</div>
+          <div class="alert-msg">Nilai total <span class="num">Rp 1.245.300.000</span> · perlu disposal review minggu ini.</div>
+          <a class="alert-cta">Lihat detail →</a>
+        </div>
+      </div>
+      <div class="alert" data-tone="amber">
+        <div class="alert-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="alert-body">
+          <div class="alert-title">12 SKU Fast Move beresiko stockout</div>
+          <div class="alert-msg">DOI &lt; 7 hari dengan lead time supplier 14 hari — segera buat PO.</div>
+          <a class="alert-cta">Generate PO →</a>
+        </div>
+      </div>
+      <div class="alert" data-tone="blue">
+        <div class="alert-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="alert-body">
+          <div class="alert-title">Tren DOI menurun 4,2% MoM</div>
+          <div class="alert-msg">Improvement dari kategori Tuna Loin & Frozen Saku — kontribusi terbesar.</div>
+          <a class="alert-cta">Buka analisis →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI GRID -->
+    <section class="kpi-grid">
+      <div class="kpi-card" data-accent="blue">
+        <div class="kpi-head">
+          <span class="kpi-label">Rata-rata DOI</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value num">58<span class="unit">hari</span></div>
+        <canvas class="kpi-spark" id="spark1"></canvas>
+        <div class="kpi-foot">
+          <span class="kpi-trend down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            -4,2%
+          </span>
+          <span class="kpi-sub">Target ≤ 60 hari</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" data-accent="teal">
+        <div class="kpi-head">
+          <span class="kpi-label">Nilai Inventory</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value num">Rp 47,8<span class="unit">M</span></div>
+        <canvas class="kpi-spark" id="spark2"></canvas>
+        <div class="kpi-foot">
+          <span class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +2,8%
+          </span>
+          <span class="kpi-sub">324 SKU aktif</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-dual" data-accent="rose">
+        <div class="kpi-head">
+          <span class="kpi-label">Slow Move</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="kpi-dual-row">
+          <div class="kpi-dual-cell">
+            <span class="kpi-dual-label">Jumlah</span>
+            <span class="kpi-dual-value num">23<span class="unit">SKU</span></span>
+          </div>
+          <div class="kpi-dual-divider"></div>
+          <div class="kpi-dual-cell">
+            <span class="kpi-dual-label">Nilai</span>
+            <span class="kpi-dual-value num">Rp 8,4<span class="unit">M</span></span>
+          </div>
+        </div>
+        <div class="kpi-foot">
+          <span class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +3 SKU MoM
+          </span>
+          <span class="kpi-sub" id="slowMoveTotal">Rp 8.412.500.000</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-dual" data-accent="green">
+        <div class="kpi-head">
+          <span class="kpi-label">Fast Move</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+        </div>
+        <div class="kpi-dual-row">
+          <div class="kpi-dual-cell">
+            <span class="kpi-dual-label">Jumlah</span>
+            <span class="kpi-dual-value num">86<span class="unit">SKU</span></span>
+          </div>
+          <div class="kpi-dual-divider"></div>
+          <div class="kpi-dual-cell">
+            <span class="kpi-dual-label">Nilai</span>
+            <span class="kpi-dual-value num">Rp 24,6<span class="unit">M</span></span>
+          </div>
+        </div>
+        <div class="kpi-foot">
+          <span class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +12 SKU MoM
+          </span>
+          <span class="kpi-sub">Turnover 12,4×</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHART GRID 2/3 — Trend + Distribution -->
+    <section class="chart-grid">
+      <!-- Trend DOI -->
+      <div class="chart-card" data-accent="blue">
+        <div class="chart-head">
+          <div class="chart-title-block">
+            <div class="chart-title">Tren DOI 12 Bulan Terakhir</div>
+            <div class="chart-sub">Perbandingan vs target perusahaan (60 hari) · per kategori</div>
+          </div>
+          <div class="chart-tabs">
+            <button class="chart-tab active">Total</button>
+            <button class="chart-tab">Per Kategori</button>
+            <button class="chart-tab">Per Plant</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap tall">
+          <canvas id="chartTrend"></canvas>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>DOI Aktual</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--teal)"></span>DOI Target</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--amber);opacity:.5"></span>Batas Upper Control (75 hari)</span>
+        </div>
+      </div>
+
+      <!-- Distribusi DOI -->
+      <div class="chart-card" data-accent="teal">
+        <div class="chart-head">
+          <div class="chart-title-block">
+            <div class="chart-title">Distribusi DOI</div>
+            <div class="chart-sub">Klasifikasi 324 SKU aktif</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap" style="height:200px">
+          <canvas id="chartDist"></canvas>
+        </div>
+        <div class="doi-bands">
+          <div class="band-row">
+            <span class="band-label"><span class="band-dot" style="background:var(--green)"></span>Fast Move</span>
+            <span><span class="band-count num">86</span><span class="band-pct">26,5%</span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-label"><span class="band-dot" style="background:var(--blue)"></span>Normal</span>
+            <span><span class="band-count num">189</span><span class="band-pct">58,3%</span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-label"><span class="band-dot" style="background:var(--amber)"></span>Slow Move</span>
+            <span><span class="band-count num">23</span><span class="band-pct">7,1%</span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-label"><span class="band-dot" style="background:var(--rose)"></span>Dead Stock</span>
+            <span><span class="band-count num">26</span><span class="band-pct">8,1%</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHART GRID 1/1 — Kategori + Plant -->
+    <section class="chart-grid-2">
+      <div class="chart-card" data-accent="purple">
+        <div class="chart-head">
+          <div class="chart-title-block">
+            <div class="chart-title">DOI per Kategori Produk</div>
+            <div class="chart-sub">Stacked bar — komposisi nilai inventory (Rp Miliar)</div>
+          </div>
+          <div class="chart-tabs">
+            <button class="chart-tab active">Nilai</button>
+            <button class="chart-tab">Qty</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartKategori"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" data-accent="amber">
+        <div class="chart-head">
+          <div class="chart-title-block">
+            <div class="chart-title">Aging Stock Heatmap</div>
+            <div class="chart-sub">Umur stock vs kategori — semakin gelap, semakin lama</div>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chartAging"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="table-grid">
+      <!-- Slow Movers -->
+      <div class="table-card">
+        <div class="table-head">
+          <div class="chart-title-block">
+            <div class="chart-title">Top 10 Slow Movers <span class="tag rose" style="margin-left:6px">Perlu Aksi</span></div>
+            <div class="chart-sub">Diurutkan berdasarkan DOI tertinggi · klik baris untuk detail</div>
+          </div>
+          <div class="table-actions">
+            <input type="text" class="search-input" placeholder="Cari SKU..." />
+          </div>
+        </div>
+        <div class="t-scroll">
+          <table class="t" id="tableSlow">
+            <thead>
+              <tr>
+                <th>SKU / Nama Barang</th>
+                <th>Kategori</th>
+                <th class="right">Stock</th>
+                <th class="right">DOI</th>
+                <th class="right">Nilai (Rp)</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-foot">
+          <span>Menampilkan <strong class="num">1–10</strong> dari <strong class="num">23</strong> SKU slow move</span>
+          <div class="pager">
+            <button class="pager-btn">‹</button>
+            <button class="pager-btn active">1</button>
+            <button class="pager-btn">2</button>
+            <button class="pager-btn">3</button>
+            <button class="pager-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fast Movers -->
+      <div class="table-card" data-accent="green">
+        <div class="table-head">
+          <div class="chart-title-block">
+            <div class="chart-title">Top 10 Fast Movers <span class="tag green" style="margin-left:6px">Pantau Stockout</span></div>
+            <div class="chart-sub">Turnover tertinggi · perhatikan SKU dengan DOI &lt; lead time</div>
+          </div>
+          <div class="table-actions">
+            <input type="text" class="search-input" placeholder="Cari SKU..." />
+          </div>
+        </div>
+        <div class="t-scroll">
+          <table class="t" id="tableFast">
+            <thead>
+              <tr>
+                <th>SKU / Nama Barang</th>
+                <th>Kategori</th>
+                <th class="right">Stock</th>
+                <th class="right">DOI</th>
+                <th class="right">Turnover</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-foot">
+          <span>Menampilkan <strong class="num">1–10</strong> dari <strong class="num">86</strong> SKU fast move</span>
+          <div class="pager">
+            <button class="pager-btn">‹</button>
+            <button class="pager-btn active">1</button>
+            <button class="pager-btn">2</button>
+            <button class="pager-btn">3</button>
+            <button class="pager-btn">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+/* ================================================================
+   FORMATTERS — Bahasa Indonesia
+   ================================================================ */
+const fmtRp = (n) => 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(n);
+const fmtNum = (n, dec=0) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+
+/* ================================================================
+   DATA — DOI Inventory PT Eka Jaya Internasional, Plant Bitung
+   ================================================================ */
+const slowMovers = [
+  { code: 'EJI-TLS-0421', name: 'Tuna Loin Skin-On Frozen 5kg', cat: 'Tuna Loin',     stock: 1250, doi: 142, value: 845000000,  uom: 'kg', last: '2026-02-14' },
+  { code: 'EJI-PKG-2103', name: 'Master Carton 6kg Premium Print',cat: 'Packaging',    stock: 8400, doi: 128, value: 168000000,  uom: 'pcs', last: '2026-02-19' },
+  { code: 'EJI-CBT-0118', name: 'Cakalang Belly Trim Block',     cat: 'By Product',   stock: 920,  doi: 119, value: 322000000,  uom: 'kg', last: '2026-02-22' },
+  { code: 'EJI-TSL-0207', name: 'Tuna Saku CO Treated 1kg',      cat: 'Tuna Saku',    stock: 660,  doi: 108, value: 528000000,  uom: 'kg', last: '2026-02-28' },
+  { code: 'EJI-SPR-3309', name: 'Sparepart Conveyor Belt 24"',   cat: 'Sparepart',    stock: 14,   doi: 96,  value: 84000000,   uom: 'pcs',last: '2026-03-01' },
+  { code: 'EJI-TLN-0109', name: 'Tuna Loin No-CO Vacuum 3kg',    cat: 'Tuna Loin',    stock: 380,  doi: 92,  value: 304000000,  uom: 'kg', last: '2026-03-04' },
+  { code: 'EJI-PKG-2207', name: 'Vacuum Bag 25×35 cm Print',     cat: 'Packaging',    stock: 22500,doi: 88,  value: 67500000,   uom: 'pcs',last: '2026-03-07' },
+  { code: 'EJI-FRZ-0508', name: 'Frozen Marlin Steak 200g',      cat: 'Frozen Fish',  stock: 540,  doi: 84,  value: 162000000,  uom: 'kg', last: '2026-03-10' },
+  { code: 'EJI-BHB-1102', name: 'Bahan Baku — Garam Industri',   cat: 'Bahan Baku',   stock: 3200, doi: 81,  value: 28800000,   uom: 'kg', last: '2026-03-12' },
+  { code: 'EJI-TPK-1104', name: 'Tuna Poke Cube 1kg Retail',     cat: 'Tuna Saku',    stock: 410,  doi: 78,  value: 287000000,  uom: 'kg', last: '2026-03-13' },
+];
+
+const fastMovers = [
+  { code: 'EJI-TLP-0301', name: 'Tuna Loin Premium CO 5kg',      cat: 'Tuna Loin',    stock: 4200, doi: 8,  turnover: 22.4, status: 'safe' },
+  { code: 'EJI-TSP-0405', name: 'Tuna Saku Premium 250g',        cat: 'Tuna Saku',    stock: 2800, doi: 6,  turnover: 19.8, status: 'watch' },
+  { code: 'EJI-PKG-1001', name: 'Polybag LDPE 30×40 cm',         cat: 'Packaging',    stock: 18000,doi: 5,  turnover: 24.1, status: 'critical' },
+  { code: 'EJI-FRZ-0202', name: 'Frozen Skipjack Whole 8–10 kg', cat: 'Frozen Fish',  stock: 6400, doi: 11, turnover: 16.2, status: 'safe' },
+  { code: 'EJI-TLN-0204', name: 'Tuna Loin No-CO 5kg Export',    cat: 'Tuna Loin',    stock: 3100, doi: 9,  turnover: 18.5, status: 'safe' },
+  { code: 'EJI-BHB-1101', name: 'Bahan Baku — Es Curah',         cat: 'Bahan Baku',   stock: 12500,doi: 4,  turnover: 26.3, status: 'critical' },
+  { code: 'EJI-TPK-1101', name: 'Tuna Poke Cube 500g Retail',    cat: 'Tuna Saku',    stock: 2200, doi: 7,  turnover: 20.6, status: 'watch' },
+  { code: 'EJI-PKG-2201', name: 'Vacuum Bag 20×30 cm Plain',     cat: 'Packaging',    stock: 24000,doi: 10, turnover: 17.4, status: 'safe' },
+  { code: 'EJI-FRZ-0501', name: 'Frozen Yellowfin Steak 250g',   cat: 'Frozen Fish',  stock: 1900, doi: 12, turnover: 15.1, status: 'safe' },
+  { code: 'EJI-TSL-0201', name: 'Tuna Saku Loin 500g Retail',    cat: 'Tuna Saku',    stock: 2600, doi: 8,  turnover: 19.2, status: 'safe' },
+];
+
+const catColor = {
+  'Tuna Loin':   { bg: 'var(--blue-soft)',   fg: 'var(--blue)'   },
+  'Tuna Saku':   { bg: 'var(--teal-soft)',   fg: 'var(--teal)'   },
+  'Frozen Fish': { bg: 'var(--purple-soft)', fg: 'var(--purple)' },
+  'Packaging':   { bg: 'var(--amber-soft)',  fg: '#B5750E'       },
+  'Bahan Baku':  { bg: 'var(--green-soft)',  fg: 'var(--green)'  },
+  'Sparepart':   { bg: '#EEF2F8',            fg: 'var(--text-2)' },
+  'By Product':  { bg: 'var(--rose-soft)',   fg: 'var(--rose)'   }
+};
+const catTagClass = {
+  'Tuna Loin':'blue', 'Tuna Saku':'teal', 'Frozen Fish':'purple',
+  'Packaging':'amber', 'Bahan Baku':'green', 'Sparepart':'gray', 'By Product':'rose'
+};
+
+/* ================================================================
+   POPULATE TABLES
+   ================================================================ */
+function doiClass(doi){
+  if (doi >= 90)  return 'rose';
+  if (doi >= 60)  return 'amber';
+  if (doi <= 14)  return 'green';
+  return 'blue';
+}
+function doiBarPct(doi){
+  return Math.min(100, (doi / 150) * 100);
+}
+
+const tbodySlow = document.querySelector('#tableSlow tbody');
+slowMovers.forEach(s => {
+  const cls = doiClass(s.doi);
+  tbodySlow.insertAdjacentHTML('beforeend', `
+    <tr>
+      <td>
+        <div class="sku-name">${s.name}</div>
+        <div class="sku-meta"><span class="sku-code">${s.code}</span> · last move ${new Date(s.last).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      </td>
+      <td><span class="tag ${catTagClass[s.cat]}">${s.cat}</span></td>
+      <td class="right num">${fmtNum(s.stock)} <span style="color:var(--text-3);font-size:10.5px">${s.uom}</span></td>
+      <td class="right">
+        <div class="doi-bar">
+          <div class="doi-bar-track"><div class="doi-bar-fill ${cls}" style="width:${doiBarPct(s.doi)}%"></div></div>
+          <div class="doi-bar-val">${s.doi}</div>
+        </div>
+      </td>
+      <td class="right num" style="color:var(--text-1);font-weight:600">${fmtRp(s.value)}</td>
+      <td>
+        <button class="action-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Disposal
+        </button>
+      </td>
+    </tr>
+  `);
+});
+
+const tbodyFast = document.querySelector('#tableFast tbody');
+const statusMap = {
+  safe:     { tag: 'green', label: 'Aman' },
+  watch:    { tag: 'amber', label: 'Pantau' },
+  critical: { tag: 'rose',  label: 'Stockout Risk' }
+};
+fastMovers.forEach(f => {
+  tbodyFast.insertAdjacentHTML('beforeend', `
+    <tr>
+      <td>
+        <div class="sku-name">${f.name}</div>
+        <div class="sku-meta"><span class="sku-code">${f.code}</span></div>
+      </td>
+      <td><span class="tag ${catTagClass[f.cat]}">${f.cat}</span></td>
+      <td class="right num">${fmtNum(f.stock)}</td>
+      <td class="right">
+        <div class="doi-bar">
+          <div class="doi-bar-track"><div class="doi-bar-fill green" style="width:${(f.doi/30)*100}%"></div></div>
+          <div class="doi-bar-val">${f.doi}</div>
+        </div>
+      </td>
+      <td class="right num" style="color:var(--text-1);font-weight:600">${fmtNum(f.turnover,1)}×</td>
+      <td><span class="tag ${statusMap[f.status].tag}">${statusMap[f.status].label}</span></td>
+    </tr>
+  `);
+});
+
+/* ================================================================
+   CHART.JS — global config
+   ================================================================ */
+Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
+Chart.defaults.font.size = 11.5;
+Chart.defaults.color = '#4A5A75';
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.plugins.tooltip.backgroundColor = '#0B1D35';
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 12 };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 11.5 };
+Chart.defaults.plugins.tooltip.boxPadding = 5;
+
+const COLORS = {
+  blue: '#2A6DF4', teal: '#0EA5A4', purple: '#7C5CFA',
+  amber: '#F5A524', rose: '#F43F5E', green: '#14B86A',
+  grid: '#E4EAF3', track: '#EEF2F8'
+};
+
+/* === SPARKLINES === */
+function sparkline(id, data, color){
+  const ctx = document.getElementById(id);
+  const w = ctx.parentElement.offsetWidth;
+  // setup gradient on actual ctx
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_,i)=>i),
+      datasets: [{
+        data, borderColor: color, borderWidth: 1.6,
+        pointRadius: 0, fill: true,
+        backgroundColor: (c) => {
+          const g = c.chart.ctx.createLinearGradient(0,0,0,30);
+          g.addColorStop(0, color + '55');
+          g.addColorStop(1, color + '00');
+          return g;
+        },
+        tension: .35
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+      animation: { duration: 800 }
+    }
+  });
+}
+sparkline('spark1', [62,64,63,65,67,66,64,62,61,60,59,58], COLORS.blue);
+sparkline('spark2', [42,43,44,45,44,46,45,46,46,47,47,48], COLORS.teal);
+sparkline('spark3', [16,18,17,19,20,19,21,20,22,21,22,23], COLORS.rose);
+sparkline('spark4', [70,72,74,73,76,78,80,79,82,84,85,86], COLORS.green);
+
+/* === CHART TREND DOI === */
+const months = ['Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des','Jan','Feb','Mar','Apr'];
+const doiActual = [72, 70, 68, 71, 69, 67, 65, 64, 62, 61, 60, 58];
+const doiTarget = Array(12).fill(60);
+const doiUcl    = Array(12).fill(75);
+
+new Chart(document.getElementById('chartTrend'), {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: 'DOI Aktual',
+        data: doiActual,
+        borderColor: COLORS.blue,
+        backgroundColor: (c) => {
+          const g = c.chart.ctx.createLinearGradient(0,0,0,260);
+          g.addColorStop(0, '#2A6DF455');
+          g.addColorStop(1, '#2A6DF400');
+          return g;
+        },
+        borderWidth: 2.4,
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: COLORS.blue,
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+      },
+      {
+        label: 'Target',
+        data: doiTarget,
+        borderColor: COLORS.teal,
+        borderWidth: 1.6,
+        borderDash: [5, 4],
+        fill: false,
+        tension: 0,
+        pointRadius: 0
+      },
+      {
+        label: 'Upper Control Limit',
+        data: doiUcl,
+        borderColor: COLORS.amber + '88',
+        borderWidth: 1.4,
+        borderDash: [3, 3],
+        fill: false,
+        tension: 0,
+        pointRadius: 0
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (c) => `${c.dataset.label}: ${c.parsed.y} hari`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#8595B0' }
+      },
+      y: {
+        beginAtZero: false,
+        suggestedMin: 50, suggestedMax: 80,
+        grid: { color: COLORS.grid, drawBorder: false },
+        ticks: { color: '#8595B0', callback: v => v + ' hr' }
+      }
+    }
+  }
+});
+
+/* === CHART DISTRIBUSI (Doughnut) === */
+new Chart(document.getElementById('chartDist'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Fast Move','Normal','Slow Move','Dead Stock'],
+    datasets: [{
+      data: [86, 189, 23, 26],
+      backgroundColor: [COLORS.green, COLORS.blue, COLORS.amber, COLORS.rose],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '72%',
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (c) => `${c.label}: ${c.parsed} SKU (${(c.parsed/324*100).toFixed(1)}%)`
+        }
+      }
+    }
+  },
+  plugins: [{
+    id: 'centerText',
+    afterDraw(chart){
+      const { ctx, chartArea } = chart;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#0B1D35';
+      ctx.font = "500 22px 'DM Mono'";
+      ctx.fillText('324', cx, cy - 2);
+      ctx.fillStyle = '#8595B0';
+      ctx.font = "500 10.5px 'DM Sans'";
+      ctx.fillText('TOTAL SKU', cx, cy + 16);
+      ctx.restore();
+    }
+  }]
+});
+
+/* === CHART KATEGORI (Stacked Bar) === */
+new Chart(document.getElementById('chartKategori'), {
+  type: 'bar',
+  data: {
+    labels: ['Tuna Loin','Tuna Saku','Frozen Fish','Packaging','Bahan Baku','Sparepart'],
+    datasets: [
+      { label: 'Fast Move',  data: [12.4, 9.8, 6.2, 1.8, 2.4, 0.6], backgroundColor: COLORS.green, stack: 's', borderRadius: 4, borderSkipped: false },
+      { label: 'Normal',     data: [4.2, 3.1, 2.8, 1.2, 1.0, 0.4],  backgroundColor: COLORS.blue,  stack: 's', borderRadius: 4, borderSkipped: false },
+      { label: 'Slow Move',  data: [1.1, 0.8, 0.4, 0.6, 0.2, 0.3],  backgroundColor: COLORS.amber, stack: 's', borderRadius: 4, borderSkipped: false },
+      { label: 'Dead Stock', data: [0.4, 0.2, 0.3, 0.5, 0.0, 0.4],  backgroundColor: COLORS.rose,  stack: 's', borderRadius: 4, borderSkipped: false },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, padding: 14, font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: (c) => `${c.dataset.label}: Rp ${c.parsed.y.toLocaleString('id-ID', { minimumFractionDigits: 1 })} M`
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { color: '#8595B0' } },
+      y: {
+        stacked: true,
+        grid: { color: COLORS.grid, drawBorder: false },
+        ticks: { color: '#8595B0', callback: v => 'Rp ' + v + ' M' }
+      }
+    }
+  }
+});
+
+/* === CHART AGING HEATMAP (custom: matrix-like via bar) === */
+const agingLabels = ['0–30 hr','31–60','61–90','91–120','>120'];
+const agingCats = ['Tuna Loin','Tuna Saku','Frozen Fish','Packaging','Bahan Baku'];
+const agingData = [
+  // rows = cat, cols = age band, values = nilai (Rp Juta)
+  [3200, 1800, 600, 240, 110],   // Tuna Loin
+  [2400, 1400, 480, 180, 80],    // Tuna Saku
+  [1600, 1100, 320, 140, 60],    // Frozen Fish
+  [1900,  900, 380, 220, 140],   // Packaging
+  [ 800,  500, 180,  60, 20],    // Bahan Baku
+];
+
+// Render as grouped bars with a "heat" color encoding
+const heatColor = (v, max) => {
+  const t = v / max;
+  // gradient amber -> rose
+  if (t > .7) return COLORS.rose;
+  if (t > .4) return COLORS.amber;
+  if (t > .2) return COLORS.blue;
+  return COLORS.teal;
+};
+const flatMax = Math.max(...agingData.flat());
+const agingDatasets = agingLabels.map((lbl, i) => ({
+  label: lbl,
+  data: agingData.map(row => row[i]),
+  backgroundColor: agingData.map(row => heatColor(row[i], flatMax)),
+  borderRadius: 3,
+  borderSkipped: false,
+}));
+
+new Chart(document.getElementById('chartAging'), {
+  type: 'bar',
+  data: { labels: agingCats, datasets: agingDatasets },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11 } } },
+      tooltip: {
+        callbacks: {
+          label: (c) => `${c.dataset.label}: Rp ${(c.parsed.x/1000).toFixed(2)} M`
+        }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: { color: COLORS.grid, drawBorder: false },
+        ticks: { color: '#8595B0', callback: v => 'Rp ' + (v/1000).toFixed(1) + 'M' }
+      },
+      y: { stacked: true, grid: { display: false }, ticks: { color: '#0B1D35', font: { weight: 500 } } }
+    }
+  }
+});
+
+/* ================================================================
+   INTERACTIONS
+   ================================================================ */
+// Plant pills toggle
+document.querySelectorAll('.plant-pills .pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.plant-pills .pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    const plant = p.dataset.plant;
+    const labelMap = {
+      all: 'All Factory',
+      bitung: 'Plant Bitung',
+      sangiang: 'Plant Sangiang'
+    };
+    const banner = document.querySelector('.period-text-main');
+    if (banner) banner.textContent = `${labelMap[plant]} — Periode 1 s/d 29 April 2026`;
+  });
+});
+
+// Sidebar nav toggle
+document.querySelectorAll('.sidebar .nav-item').forEach(n => {
+  n.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar .nav-item').forEach(x => x.classList.remove('active'));
+    n.classList.add('active');
+  });
+});
+
+// Chart tabs
+document.querySelectorAll('.chart-tabs').forEach(group => {
+  group.querySelectorAll('.chart-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      group.querySelectorAll('.chart-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+});
+
+// Search filtering for slow & fast tables
+function bindSearch(inputEl, tableId){
+  inputEl.addEventListener('input', () => {
+    const q = inputEl.value.toLowerCase().trim();
+    document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+}
+const inputs = document.querySelectorAll('.search-input');
+if (inputs[0]) bindSearch(inputs[0], 'tableSlow');
+if (inputs[1]) bindSearch(inputs[1], 'tableFast');
+
+</script>
+</body>
+</html>
