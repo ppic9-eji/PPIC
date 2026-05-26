@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Value Dashboard — PT Eka Jaya Internasional</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F0F4FA; --card:#FFFFFF; --card-bdr:#E2E8F0; --card-sh:0 1px 6px rgba(0,0,0,.07);
+  --topbar:#FFFFFF; --topbar-bdr:#E2E8F0;
+  --tp:#0F172A; --ts:#64748B; --tm:#94A3B8; --tl:#CBD5E1;
+  --cs:#2563EB; --cs-lt:#EFF6FF; --cs-bdr:#BFDBFE;
+  --cm:#7C3AED; --cm-lt:#F5F3FF; --cm-bdr:#DDD6FE;
+  --cc:#D97706; --cc-lt:#FFFBEB; --cc-bdr:#FDE68A;
+  --cg:#059669; --cg-lt:#F0FDF4; --cg-bdr:#A7F3D0;
+  --ct:#0D9488; --ct-lt:#F0FDFC; --ct-bdr:#99F6E4;
+  --cp:#DB2777; --cp-lt:#FDF2F8; --cp-bdr:#FBCFE8;
+  --cd:#DC2626;
+  --radius:14px; --accent:3px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--card-bdr);border-radius:3px}
+
+#loading-overlay{
+  position:fixed;inset:0;background:rgba(240,244,250,.95);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .3s
+}
+.lo-spinner{width:44px;height:44px;border:3px solid var(--cs-bdr);border-top-color:var(--cs);border-radius:50%;animation:spin .75s linear infinite}
+.lo-msg{font-size:13px;color:var(--ts);font-weight:500}
+.lo-sub{font-size:11px;color:var(--tm)}
+
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--topbar);border-bottom:1px solid var(--topbar-bdr);
+  height:60px;padding:0 28px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 1px 8px rgba(0,0,0,.06)
+}
+.tlogo{width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center}
+.tlogo-fb{font-size:22px}
+.tdivider{width:1px;height:28px;background:var(--card-bdr)}
+.tname{font-size:15px;font-weight:700;color:var(--tp)}
+.tsub{font-size:11px;color:var(--ts);margin-top:1px}
+.tsp{flex:1}
+.lupd-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:0;min-width:150px}
+.lupd-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm)}
+.lupd-date{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--tp);line-height:1.3}
+.lupd-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--ts);line-height:1.3}
+.btn-refresh{
+  display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,#1D4ED8,#4F46E5);color:#fff;
+  border:none;border-radius:9px;padding:9px 18px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  box-shadow:0 3px 12px rgba(37,99,235,.4);transition:all .18s;letter-spacing:.01em
+}
+.btn-refresh:hover{background:linear-gradient(135deg,#1e40af,#4338ca);transform:translateY(-1px)}
+.btn-refresh:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.spin{display:inline-block;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.tab-bar{background:var(--card);border-bottom:1px solid var(--card-bdr);padding:0 28px;display:flex;gap:0}
+.tab-btn{padding:13px 20px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.tab-btn:hover{color:var(--ts)}.tab-btn.active{color:var(--cs);border-bottom-color:var(--cs)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+.banner{display:none;margin:12px 28px;padding:11px 16px;border-radius:9px;font-size:12px;align-items:center;gap:10px}
+.b-warn{background:#FFFBEB;border:1px solid #FDE68A;color:#92400E}
+.b-err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
+.b-ok{background:#F0FDF4;border:1px solid #A7F3D0;color:#065F46}
+.banner button{margin-left:auto;border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;color:#fff}
+.b-warn button{background:#D97706}.b-err button{background:#DC2626}.b-ok button{background:#059669}
+
+.main{max-width:1640px;margin:0 auto;padding:24px 28px}
+.slbl{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--tm);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--card-bdr)}
+
+/* ── DYNAMIC KPI GRID (COMPACT) ── */
+.kpi-grid{display:grid;gap:10px;margin-bottom:14px}
+.kpi-grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.kpi-grid.cols-5{grid-template-columns:repeat(5,1fr)}
+.kpi-grid.cols-8{grid-template-columns:repeat(8,1fr)}
+.kpi{background:var(--card);border:1px solid var(--card-bdr);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;box-shadow:var(--card-sh);cursor:pointer;transition:all .15s;user-select:none}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:currentColor}
+.kpi::after{content:'';position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:3px;border:1.5px solid var(--card-bdr);transition:all .15s}
+.kpi.sel::after{border-color:transparent;background-color:currentColor;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M1 6l3 3 7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:7px}
+.kpi.sel{box-shadow:0 0 0 1.5px currentColor,var(--card-sh)}.kpi:not(.sel){opacity:.45}.kpi:hover{opacity:1!important;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.kpi.k-s{color:var(--cs)}.kpi.k-m{color:var(--cm)}.kpi.k-c{color:var(--cc)}.kpi.k-g{color:var(--cg)}
+.kpi.k-t{color:var(--ct)}.kpi.k-p{color:var(--cp)}.kpi.k-d{color:var(--cd)}.kpi.k-n{color:#475569}
+.khead{display:flex;align-items:center;gap:5px;margin-bottom:4px;padding-right:14px}
+.ki{font-size:13px;line-height:1;flex-shrink:0}
+.klbl{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ts);line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kval{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;line-height:1.15;margin-bottom:2px;color:inherit;word-break:break-all;letter-spacing:-.01em}
+.ksub{font-size:9px;color:var(--tm);line-height:1.2}.ksub .n{font-family:'DM Mono',monospace;font-weight:500;color:var(--ts)}
+
+.period-bar{background:var(--card);border:1px solid var(--card-bdr);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--card-sh)}
+.plbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);white-space:nowrap}
+.ms-wrap{position:relative;flex:1;min-width:200px;max-width:500px}
+.ms-trigger{background:var(--bg);border:1px solid var(--card-bdr);border-radius:8px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border-color .15s;min-height:36px}
+.ms-trigger:hover,.ms-trigger.open{border-color:var(--cs)}
+.ms-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.chip{background:var(--cs-lt);border:1px solid var(--cs-bdr);color:var(--cs);font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;display:flex;align-items:center;gap:3px}
+.chip-x{cursor:pointer;opacity:.6;font-size:11px}.chip-x:hover{opacity:1}
+.ms-placeholder{font-size:12px;color:var(--tm)}
+.ms-arrow{color:var(--tm);font-size:10px;flex-shrink:0;transition:transform .15s}
+.ms-trigger.open .ms-arrow{transform:rotate(180deg)}
+.ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--card-bdr);border-radius:10px;z-index:200;box-shadow:0 8px 28px rgba(0,0,0,.12);max-height:320px;overflow-y:auto}
+.ms-dropdown.hidden{display:none}
+.ms-section{padding:8px 0}
+.ms-slbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tm);padding:4px 14px}
+.ms-opt{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;transition:background .1s;font-size:12px;color:var(--ts)}
+.ms-opt:hover{background:var(--bg);color:var(--tp)}
+.ms-opt input[type=checkbox]{accent-color:var(--cs);width:13px;height:13px;cursor:pointer;flex-shrink:0}
+.ms-opt.checked{color:var(--tp)}.ms-opt-lbl{font-family:'DM Mono',monospace;font-size:11px}
+.ms-actions{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--card-bdr)}
+.ms-act{font-size:11px;color:var(--cs);cursor:pointer;padding:2px 4px;border-radius:4px}.ms-act:hover{background:var(--cs-lt)}
+.pcached{font-family:'DM Mono',monospace;font-size:10px;color:var(--ts);padding:3px 9px;background:var(--bg);border:1px solid var(--card-bdr);border-radius:5px;white-space:nowrap}
+.ms-apply{background:linear-gradient(135deg,#1D4ED8,#4F46E5);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,.3);transition:all .18s;white-space:nowrap}
+.ms-apply:hover{opacity:.9}
+
+.csec{background:var(--card);border:1px solid var(--card-bdr);border-radius:var(--radius);padding:22px;margin-bottom:24px;box-shadow:var(--card-sh)}
+.chdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.ctitle{font-size:14px;font-weight:600;color:var(--tp)}
+.cbadge{font-family:'DM Mono',monospace;font-size:11px;padding:4px 10px;border-radius:12px;background:var(--cs-lt);border:1px solid var(--cs-bdr);color:var(--cs)}
+.cwrap{position:relative;height:340px}.cwrap canvas{width:100%!important}
+.no-data{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--tm);font-size:13px;gap:8px}
+
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.cc{background:var(--card);border:1px solid var(--card-bdr);border-radius:var(--radius);padding:20px;box-shadow:var(--card-sh)}
+.cc.fw{grid-column:1/-1}
+.cctitle{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ts);margin-bottom:14px}
+.cctitle span{color:var(--tl);font-weight:400;text-transform:none}
+.ccin{display:grid;grid-template-columns:165px 1fr;gap:14px;align-items:start}.ccin.fw{grid-template-columns:1fr}
+.dwrap{display:flex;flex-direction:column;align-items:center;gap:6px}.dwrap canvas{max-width:150px;max-height:150px}
+.tw{overflow:auto;max-height:185px}
+.ct{width:100%;border-collapse:collapse;font-size:11px}
+.ct th{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#374151;border-bottom:2px solid var(--cs);padding:6px 5px;background:#F8FAFF;position:sticky;top:0;white-space:nowrap;text-align:left}
+.ct td{padding:5px;border-bottom:1px solid #F1F5F9;color:var(--ts)}
+.ct td.r{text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--tp)}
+.ct td.p{text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--tm)}
+.ct tr:hover td{background:#F8FAFC}
+.bwrap{height:260px;position:relative}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.03em}
+.ba{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.bb{background:var(--cs-lt);color:#1D4ED8;border:1px solid var(--cs-bdr)}
+.bc{background:#F1F5F9;color:#64748B;border:1px solid #E2E8F0}
+.bn{background:#F1F5F9;color:#94A3B8;border:1px solid #E2E8F0}
+
+.tsec{background:var(--card);border:1px solid var(--card-bdr);border-radius:var(--radius);padding:22px;margin-bottom:24px;box-shadow:var(--card-sh)}
+.tbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ttl{font-size:14px;font-weight:700;color:var(--tp);flex:1}
+.sinp{background:var(--bg);border:1px solid var(--card-bdr);color:var(--tp);padding:7px 12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;width:220px;transition:border-color .15s}
+.sinp::placeholder{color:var(--tm)}.sinp:focus{outline:none;border-color:var(--cs);box-shadow:0 0 0 3px var(--cs-lt)}
+.dw{overflow-x:auto}
+.dt{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+.dt th{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#1E3A5F;background:#F0F6FF;border-bottom:2px solid var(--cs);padding:9px 10px;position:sticky;top:0;cursor:pointer;user-select:none;z-index:2}
+.dt th:hover{background:#E8F1FF;color:#1D4ED8}
+.dt th .si{margin-left:2px;opacity:.3;font-size:9px}
+.dt th.s-a .si::after{content:'↑';opacity:1;color:var(--cs)}
+.dt th.s-d .si::after{content:'↓';opacity:1;color:var(--cs)}
+.dt th .si::after{content:'↕'}
+.dt td{padding:6px 10px;border-bottom:1px solid #F1F5F9;color:var(--ts)}
+.dt td.mo{font-family:'DM Mono',monospace;font-size:10px;color:var(--tp);text-align:right}
+.dt tr:hover td{background:#FAFCFF}
+.dt tr.ra td{background:#FFFDF0}.dt tr.rb td{background:#F8FAFE}
+.dt th.mc{background:#F5F0FF;color:#5B21B6;border-bottom-color:#7C3AED}
+.dt td.mc{color:var(--ts);font-size:10px}
+table.hide-mc th.mc,table.hide-mc td.mc{display:none}
+.dt th.uom-h{background:#F0FDFC;color:#0D6B60;border-bottom-color:#0D9488}
+.dt td.uom-d{color:#0F766E;font-family:'DM Mono',monospace;font-size:10px;text-align:center;font-weight:500}
+
+.pagi{display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.pinfo{font-size:11px;color:var(--tm);font-family:'DM Mono',monospace;margin-right:auto}
+.bpg{background:var(--card);border:1px solid var(--card-bdr);color:var(--ts);padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .1s}
+.bpg:hover:not(:disabled){background:var(--cs-lt);border-color:var(--cs);color:var(--cs)}.bpg:disabled{opacity:.35;cursor:not-allowed}
+.bpg.ap{background:var(--cs);border-color:var(--cs);color:#fff;font-weight:600}
+
+.btn-sm{display:inline-flex;align-items:center;gap:5px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .15s;padding:7px 13px;border:1px solid var(--card-bdr);background:var(--card);color:var(--ts)}
+.btn-sm:hover{border-color:var(--cs);color:var(--cs);background:var(--cs-lt)}
+.btn-export{border-color:var(--cg-bdr);background:var(--cg-lt);color:var(--cg)}
+.btn-export:hover{background:#D1FAE5;border-color:var(--cg)}
+
+.type-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.type-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--card-bdr);background:transparent;color:var(--tm);font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.04em}
+.type-pill:hover{border-color:var(--cs);color:var(--cs);background:var(--cs-lt)}
+.type-pill.active{color:#fff;border-color:transparent}
+.tp-all.active{background:#475569}.tp-fg.active{background:#7C3AED}
+.tp-rm.active{background:#059669}.tp-pm.active{background:#D97706}
+.tp-count{font-size:9px;opacity:.75;font-weight:500}
+
+.footer{border-top:1px solid var(--card-bdr);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--card)}
+.ftxt{font-size:11px;color:var(--tm)}.fbadge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tm)}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--cg);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+.mov{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.mov.open{display:flex}
+.mbox{background:var(--card);border:1px solid var(--card-bdr);border-radius:16px;padding:24px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.mttl{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;color:var(--tp)}
+.mcls{background:none;border:none;color:var(--tm);font-size:18px;cursor:pointer;padding:0 4px;border-radius:4px}.mcls:hover{background:var(--bg);color:var(--tp)}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mi{padding:11px 13px;background:var(--bg);border-radius:8px;border:1px solid var(--card-bdr)}
+.milbl{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.mival{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--tp)}
+
+.hidden{display:none!important}
+
+@media(max-width:1440px){.kpi-grid.cols-8{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:1280px){.kpi-grid.cols-5{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:1024px){.kpi-grid{grid-template-columns:repeat(3,1fr)!important}.cgrid{grid-template-columns:1fr}.cc.fw{grid-column:auto}.ccin{grid-template-columns:1fr}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)!important}.main{padding:12px 14px}.topbar{padding:0 14px}.sinp{width:100%}.cwrap{height:260px}}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="lo-spinner"></div>
+  <div class="lo-msg">Memuat data dashboard…</div>
+  <div class="lo-sub" id="lo-sub">Mengambil data dari cache…</div>
+</div>
+
+<header class="topbar">
+  <div class="tlogo">
+    <img src="https://drive.google.com/thumbnail?id=1HtluCJS2rlVFlq3DD_dggDAL0zeN6kq-&sz=w88"
+         alt="EJI"
+         onerror="this.style.display='none';document.getElementById('tfb').style.display='flex'">
+    <span class="tlogo-fb" id="tfb" style="display:none">📦</span>
+  </div>
+  <div class="tdivider"></div>
+  <div>
+    <div class="tname">Inventory Value Dashboard</div>
+    <div class="tsub">PT Eka Jaya Internasional</div>
+  </div>
+  <div class="tsp"></div>
+  <div class="lupd-wrap">
+    <span class="lupd-lbl" id="lupd-lbl">Last Update</span>
+    <span class="lupd-date" id="lupd-date">–</span>
+    <span class="lupd-time" id="lupd-time">–</span>
+  </div>
+  <button class="btn-refresh" id="btn-refresh" onclick="reloadData()">
+    <span id="ri">↻</span> Refresh Data
+  </button>
+</header>
+
+<div class="tab-bar">
+  <div class="tab-btn active" data-tab="dash" onclick="switchTab('dash')">📊 Dashboard</div>
+  <div class="tab-btn" data-tab="raw" onclick="switchTab('raw')">🔍 Raw Data</div>
+</div>
+
+<div class="banner b-warn" id="b-warn"><span>ℹ️</span><span id="warn-msg">–</span><button onclick="closeBanner('b-warn')">✕</button></div>
+<div class="banner b-err"  id="b-err" ><span>⚠️</span><span id="err-msg">–</span> <button onclick="closeBanner('b-err')">✕</button></div>
+<div class="banner b-ok"   id="b-ok"  ><span>✅</span><span id="ok-msg">–</span>  <button onclick="closeBanner('b-ok')">✕</button></div>
+
+<div class="tab-pane active" id="tab-dash">
+<main class="main">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)">Tampilkan:</span>
+    <div class="type-pills">
+      <button class="type-pill tp-all active" id="tp-all" onclick="setTypeFilter('all')">Semua <span class="tp-count" id="tpc-all"></span></button>
+      <button class="type-pill tp-fg"  id="tp-fg"  onclick="setTypeFilter('fg')">🏭 FG <span class="tp-count" id="tpc-fg"></span></button>
+      <button class="type-pill tp-rm"  id="tp-rm"  onclick="setTypeFilter('rm')">🧪 RM <span class="tp-count" id="tpc-rm"></span></button>
+      <button class="type-pill tp-pm"  id="tp-pm"  onclick="setTypeFilter('pm')">📦 PM <span class="tp-count" id="tpc-pm"></span></button>
+    </div>
+    <span id="type-filter-note" style="font-size:11px;color:var(--tm)"></span>
+  </div>
+
+  <div class="slbl" id="kpi-section-label">Summary Metrics — klik card untuk toggle grafik</div>
+
+  <!-- DYNAMIC KPI GRID — populated by renderKPIGrid() -->
+  <div class="kpi-grid cols-4" id="kpi-grid"></div>
+
+  <div class="period-bar">
+    <span class="plbl">Periode:</span>
+    <div class="ms-wrap" id="ms-wrap">
+      <div class="ms-trigger" id="ms-trigger" onclick="toggleDropdown()">
+        <div class="ms-chips" id="ms-chips"><span class="ms-placeholder">Pilih periode…</span></div>
+        <span class="ms-arrow">▼</span>
+      </div>
+      <div class="ms-dropdown hidden" id="ms-dd">
+        <div class="ms-section">
+          <div class="ms-slbl">Bulan</div>
+          <div id="ms-month-opts"></div>
+        </div>
+        <div class="ms-section">
+          <div class="ms-slbl">Kuartal & Semester</div>
+          <div id="ms-qtr-opts"></div>
+        </div>
+        <div class="ms-actions">
+          <span class="ms-act" onclick="selectAll()">Pilih Semua</span>
+          <span class="ms-act" onclick="clearAll()">Hapus Semua</span>
+        </div>
+      </div>
+    </div>
+    <button class="ms-apply" onclick="applyPeriods()">Terapkan ▶</button>
+    <span class="pcached" id="pcached">–</span>
+  </div>
+
+  <div class="slbl">Nilai per Periode</div>
+  <div class="csec">
+    <div class="chdr">
+      <div class="ctitle">Item Value Distribution by Period</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="cbadge" id="cpbadge">–</div>
+      </div>
+    </div>
+    <div class="cwrap">
+      <canvas id="mchart"></canvas>
+      <div class="no-data hidden" id="no-data-msg">
+        <span style="font-size:32px">📅</span>
+        <span style="color:var(--tm)">Pilih periode dan klik Terapkan</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slbl">Breakdown Analysis</div>
+  <div class="cgrid">
+    <div class="cc" id="p-cat"><div class="cctitle">🏷 Category <span>dari Master Data</span></div>
+      <div class="ccin"><div class="dwrap"><canvas id="ch-cat"></canvas></div>
+      <div class="tw"><div id="sk-cat" style="width:100%;height:140px;border-radius:6px;background:var(--bg)"></div></div></div></div>
+    <div class="cc" id="p-grp"><div class="cctitle">🗂 Material Group <span>Top 8</span></div>
+      <div class="ccin"><div class="dwrap"><canvas id="ch-grp"></canvas></div>
+      <div class="tw"><div id="sk-grp" style="width:100%;height:140px;border-radius:6px;background:var(--bg)"></div></div></div></div>
+    <div class="cc" id="p-brk"><div class="cctitle">💎 Value per Unit <span>Bracket</span></div>
+      <div class="ccin"><div class="dwrap"><canvas id="ch-brk"></canvas></div>
+      <div class="tw"><div id="sk-brk" style="width:100%;height:140px;border-radius:6px;background:var(--bg)"></div></div></div></div>
+    <div class="cc" id="p-abc"><div class="cctitle">⭐ ABC Class <span>dari Master Data</span></div>
+      <div class="ccin"><div class="dwrap"><canvas id="ch-abc"></canvas></div>
+      <div class="tw"><div id="sk-abc" style="width:100%;height:140px;border-radius:6px;background:var(--bg)"></div></div></div></div>
+    <div class="cc fw" id="p-top">
+      <div class="cctitle">🔝 Top 10 Items by Stock Value <span>klik bar untuk detail</span></div>
+      <div class="ccin fw"><div class="bwrap">
+        <canvas id="ch-top" style="height:100%"></canvas>
+      </div></div></div>
+  </div>
+
+  <div class="slbl">Item-Level Combined Report</div>
+  <div class="tsec">
+    <div class="tbar">
+      <div class="ttl">Combined Inventory Report <span id="cogm-tbl-note" style="font-size:11px;color:var(--cg);font-weight:400"></span></div>
+      <input type="text" class="sinp" id="tsearch" placeholder="🔍 Cari item code / deskripsi…" oninput="debounceSearch()">
+      <button class="btn-sm" id="btn-toggle-master" onclick="toggleMasterCols()">🙈 Sembunyikan Detail</button>
+      <button class="btn-sm btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="dw">
+      <table class="dt" id="tbl-combined">
+        <thead><tr>
+          <th onclick="sortTbl('ItemCode')">Item Code <span class="si"></span></th>
+          <th onclick="sortTbl('ItemName')">Description <span class="si"></span></th>
+          <th class="mc" onclick="sortTbl('Category')">Category <span class="si"></span></th>
+          <th class="mc" onclick="sortTbl('Group')">Group <span class="si"></span></th>
+          <th onclick="sortTbl('ABCClass')">ABC <span class="si"></span></th>
+          <th class="uom-h" onclick="sortTbl('UoM')">UoM <span class="si"></span></th>
+          <th onclick="sortTbl('EndStockQty')">Stock Qty <span class="si"></span></th>
+          <th onclick="sortTbl('EndStockValue')">Stock Val <span class="si"></span></th>
+          <th onclick="sortTbl('MatConsValue')">Cons Val <span class="si"></span></th>
+          <th onclick="sortTbl('MRPValue')">MRP Val <span class="si"></span></th>
+          <th onclick="sortTbl('GRPOValue')">GRPO Val <span class="si"></span></th>
+        </tr></thead>
+        <tbody id="tbody"><tr><td colspan="11" style="padding:40px;text-align:center;color:var(--tm)">Memuat data…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:var(--tm);margin-top:8px" id="tbl-period-note">–</div>
+    <div class="pagi" id="pagi"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- Raw Data Tab -->
+<div class="tab-pane" id="tab-raw">
+<main class="main">
+  <div class="slbl">Data Tarikan — Langsung dari Spreadsheet Cache</div>
+  <div class="tsec">
+    <div class="raw-info" style="font-size:12px;color:var(--ts);margin-bottom:14px;padding:10px 14px;background:var(--cs-lt);border-radius:7px;border-left:3px solid var(--cs)">
+      Data diambil dari Google Spreadsheet cache. Cache terakhir diperbarui: <strong id="raw-lupd">–</strong>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px" id="raw-counts"></div>
+    <div style="font-size:12px;color:var(--ts)">Raw data tersedia di tab Dashboard. Untuk data detail per baris, buka spreadsheet sumber di Google Drive.</div>
+  </div>
+</main>
+</div>
+
+<footer class="footer">
+  <div class="ftxt">Google Spreadsheet Cache · ID: <span style="font-family:'DM Mono',monospace;font-size:10px">1BJWX4-KBv0FPzNTDLvfyhIrAnRc3DmKzydnfX-bzl-4</span></div>
+  <div class="fbadge"><div class="ldot"></div><span id="fst">Memuat…</span></div>
+</footer>
+
+<div class="mov" id="mov" onclick="closeModal(event)">
+  <div class="mbox">
+    <div class="mttl"><span id="mttl">Item Detail</span><button class="mcls" onclick="document.getElementById('mov').classList.remove('open')">✕</button></div>
+    <div class="mgrid" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════
+const LS_KEY = 'eji_iv_v5';
+let RAW_DATA = null;
+
+// ═══════════════════════════════════════
+// ── KPI CARD CONFIGURATIONS PER TYPE ──
+// ═══════════════════════════════════════
+// Setiap card memiliki:
+//   id      → unique identifier (juga jadi key di S.sel)
+//   icon    → emoji icon
+//   label   → label tampilan di card
+//   color   → kelas warna (k-s biru, k-m ungu, k-c oranye, k-g hijau, k-t teal, k-p pink, k-d merah, k-n abu)
+//   field   → field di item (untuk total KPI)
+//   pdKey   → key di period_data (untuk chart per periode)
+//   chartLabel → label di legend chart
+//   chartColor → warna chart
+//   subFn   → function untuk subtitle (optional)
+const CARD_CONFIGS = {
+  // ── DEFAULT (Semua) ──
+  all: [
+    {id:'stock', icon:'📦', label:'End Stock Value',       color:'k-s', field:'EndStockValue', altField:'COGMValue', pdKey:'stock', chartLabel:'End Stock', chartColor:'#2563EB'},
+    {id:'mrp',   icon:'📋', label:'Total MRP Value',       color:'k-m', field:'MRPValue',                            pdKey:'mrp',   chartLabel:'MRP',       chartColor:'#7C3AED'},
+    {id:'cons',  icon:'🔥', label:'Mat Consumption Value', color:'k-c', field:'MatConsValue',                        pdKey:'cons',  chartLabel:'Mat Cons',  chartColor:'#D97706'},
+    {id:'grpo',  icon:'🚚', label:'Total GRPO Value',      color:'k-g', field:'GRPOValue',                           pdKey:'grpo',  chartLabel:'GRPO',      chartColor:'#059669'},
+  ],
+  // ── FG (Finished Goods) — 8 cards ──
+  fg: [
+    {id:'stock',    icon:'📦', label:'Stock',           color:'k-s', field:'EndStockValue', altField:'COGMValue', pdKey:'stock',    chartLabel:'Stock',       chartColor:'#2563EB'},
+    {id:'realsq',   icon:'📊', label:'Real SQ',         color:'k-m', field:'RealSQValue',                         pdKey:'realsq',   chartLabel:'Real SQ',     chartColor:'#7C3AED'},
+    {id:'sq',       icon:'📈', label:'SQ',              color:'k-c', field:'SQValue',                             pdKey:'sq',       chartLabel:'SQ',          chartColor:'#D97706'},
+    {id:'forecast', icon:'🔮', label:'Forecast',        color:'k-g', field:'ForecastValue',                       pdKey:'forecast', chartLabel:'Forecast',    chartColor:'#059669'},
+    {id:'mps',      icon:'📋', label:'MPS',             color:'k-t', field:'MRPValue',                            pdKey:'mrp',      chartLabel:'MPS',         chartColor:'#0D9488'},
+    {id:'do',       icon:'🚚', label:'DO (Sell In)',    color:'k-p', field:'DOValue',                             pdKey:'do',       chartLabel:'DO',          chartColor:'#DB2777'},
+    {id:'so',       icon:'📝', label:'SO',              color:'k-d', field:'SOValue',                             pdKey:'so',       chartLabel:'SO',          chartColor:'#DC2626'},
+    {id:'stm',      icon:'📤', label:'STM',             color:'k-n', field:'STMValue',                            pdKey:'stm',      chartLabel:'STM',         chartColor:'#475569'},
+  ],
+  // ── RM (Raw Material) — 5 cards ──
+  rm: [
+    {id:'stock', icon:'📦', label:'Stock',                color:'k-s', field:'EndStockValue', altField:'COGMValue', pdKey:'stock',   chartLabel:'Stock',     chartColor:'#2563EB'},
+    {id:'grpo',  icon:'🚚', label:'GRPO',                 color:'k-g', field:'GRPOValue',                           pdKey:'grpo',    chartLabel:'GRPO',      chartColor:'#059669'},
+    {id:'cons',  icon:'🔥', label:'Material Consumption', color:'k-c', field:'MatConsValue',                        pdKey:'cons',    chartLabel:'Mat Cons',  chartColor:'#D97706'},
+    {id:'mrp',   icon:'📋', label:'MRP',                  color:'k-m', field:'MRPValue',                            pdKey:'mrp',     chartLabel:'MRP',       chartColor:'#7C3AED'},
+    {id:'grout', icon:'📤', label:'GR Output',            color:'k-t', field:'GROutputValue',                       pdKey:'grout',   chartLabel:'GR Output', chartColor:'#0D9488'},
+  ],
+  // ── PM (Packaging Material) — sama dengan RM ──
+  pm: [
+    {id:'stock', icon:'📦', label:'Stock',                color:'k-s', field:'EndStockValue', altField:'COGMValue', pdKey:'stock',   chartLabel:'Stock',     chartColor:'#2563EB'},
+    {id:'grpo',  icon:'🚚', label:'GRPO',                 color:'k-g', field:'GRPOValue',                           pdKey:'grpo',    chartLabel:'GRPO',      chartColor:'#059669'},
+    {id:'cons',  icon:'🔥', label:'Material Consumption', color:'k-c', field:'MatConsValue',                        pdKey:'cons',    chartLabel:'Mat Cons',  chartColor:'#D97706'},
+    {id:'mrp',   icon:'📋', label:'MRP',                  color:'k-m', field:'MRPValue',                            pdKey:'mrp',     chartLabel:'MRP',       chartColor:'#7C3AED'},
+    {id:'grout', icon:'📤', label:'GR Output',            color:'k-t', field:'GROutputValue',                       pdKey:'grout',   chartLabel:'GR Output', chartColor:'#0D9488'},
+  ]
+};
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const S = {
+  merged: [],
+  filtered: [],
+  sel: new Set(),              // populated dinamis dari card config aktif
+  selPeriods: [],
+  tbl: { page:1, sortCol:'EndStockValue', sortDir:'desc', query:'', typeFilter:'all' },
+  PAGE: 50,
+  dbt: null,
+  AVAILABLE_PERIODS: [],
+  QUARTERS: [],
+  currentCards: []             // array of active card configs
+};
+
+// ═══════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════
+const fmt = {
+  cur:     n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID'),
+  compact: n => { n=n||0; if(n>=1e12)return(n/1e12).toFixed(1)+'T'; if(n>=1e9)return(n/1e9).toFixed(1)+'B'; if(n>=1e6)return(n/1e6).toFixed(1)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return Math.round(n).toString(); },
+  pct:     n => (n||0).toFixed(1)+'%',
+  qty:     n => Math.round(n||0).toLocaleString('id-ID'),
+  ax:      n => 'Rp ' + fmt.compact(n),
+  ts:      s => {
+    if(!s) return '–';
+    try {
+      const d = new Date(s);
+      const tgl = d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+      const jam = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      return tgl + ', ' + jam + ' WIB';
+    } catch(e) { return s; }
+  }
+};
+
+// ═══════════════════════════════════════
+// DATA LOADING (localStorage → GAS)
+// ═══════════════════════════════════════
+function loadData() {
+  try {
+    const cached = localStorage.getItem(LS_KEY);
+    if(cached) {
+      const parsed = JSON.parse(cached);
+      if(parsed && parsed.data && parsed.data.merged) {
+        setLoSub('Memuat dari cache lokal…');
+        initWithData(parsed.data);
+        return;
+      }
+    }
+  } catch(e) {}
+  fetchFromGAS();
+}
+
+function fetchFromGAS() {
+  setLoSub('Mengambil data dari server…');
+  showOverlay(true);
+  google.script.run
+    .withSuccessHandler(res => {
+      if(!res || !res.merged) { showErr('getData() mengembalikan data kosong.'); showOverlay(false); return; }
+      try { localStorage.setItem(LS_KEY, JSON.stringify({data:res, ts:Date.now()})); } catch(e) {}
+      initWithData(res);
+    })
+    .withFailureHandler(err => {
+      showOverlay(false);
+      showErr('Gagal memuat data: ' + (err.message || err));
+    })
+    .getData();
+}
+
+function initWithData(data) {
+  RAW_DATA = data;
+  updateTimestampUI(data.lastRefresh);
+  buildPeriodOptions(data);
+  initPeriodDropdown();
+  buildMerged();
+  renderKPIGrid();              // ← build cards first
+  renderKPI();
+  S.selPeriods = S.AVAILABLE_PERIODS.slice();
+  updateBadge();
+  renderMainChart();
+  renderPanels();
+  renderTable();
+  updatePillCounts();
+  updateRawTab(data);
+  updateFooterStatus(data);
+  showOverlay(false);
+}
+
+function updateTimestampUI(ts) {
+  if(!ts) return;
+  try {
+    const d = new Date(ts);
+    document.getElementById('lupd-date').textContent = d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+    document.getElementById('lupd-time').textContent = '🕐 ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) + ' WIB';
+    const el = document.getElementById('raw-lupd');
+    if(el) el.textContent = fmt.ts(ts);
+  } catch(e) {}
+}
+
+function updateFooterStatus(data) {
+  const total = (data.merged||[]).length;
+  document.getElementById('fst').textContent = 'Data loaded · ' + total + ' items merged';
+}
+
+function updateRawTab(data) {
+  const m = data.merged || [];
+  const fg = m.filter(r=>(r.ItemCode||'').startsWith('1')).length;
+  const rm = m.filter(r=>(r.ItemCode||'').startsWith('3')).length;
+  const pm = m.filter(r=>(r.ItemCode||'').startsWith('4')).length;
+  const items = [
+    ['FG Items', fg],
+    ['RM Items', rm],
+    ['PM Items', pm],
+    ['Total Merged', m.length],
+  ];
+  document.getElementById('raw-counts').innerHTML = items.map(([l,v])=>
+    `<div style="background:var(--bg);border:1px solid var(--card-bdr);border-radius:9px;padding:10px 16px">
+      <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${l}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--tp)">${v.toLocaleString('id-ID')}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// REFRESH
+// ═══════════════════════════════════════
+function reloadData() {
+  const btn = document.getElementById('btn-refresh');
+  btn.disabled = true;
+  document.getElementById('ri').className = 'spin';
+  setLoSub('Menjalankan update data…');
+  showOverlay(true);
+  try { localStorage.removeItem(LS_KEY); } catch(e) {}
+  google.script.run
+    .withSuccessHandler(() => {
+      setLoSub('Update selesai, mengambil data baru…');
+      fetchFromGAS();
+      btn.disabled = false;
+      document.getElementById('ri').className = '';
+      document.getElementById('ri').textContent = '↻';
+    })
+    .withFailureHandler(err => {
+      showOverlay(false);
+      btn.disabled = false;
+      document.getElementById('ri').className = '';
+      document.getElementById('ri').textContent = '↻';
+      showErr('Gagal refresh: ' + (err.message || err));
+    })
+    .updateAllNodeDataNoPopup();
+}
+
+// ═══════════════════════════════════════
+// PERIOD OPTIONS
+// ═══════════════════════════════════════
+const MONTH_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+const MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function buildPeriodOptions(data) {
+  const keys = Object.keys(data.period_data || {});
+  S.AVAILABLE_PERIODS = keys.map(k => ({key: k, label: k, type:'month'}));
+  const yrs = {};
+  S.AVAILABLE_PERIODS.forEach(p => {
+    const parts = p.label.split(' ');
+    if(parts.length===2) {
+      const yr = parts[1]; if(!yrs[yr]) yrs[yr]=[];
+      yrs[yr].push(MONTH_EN.indexOf(parts[0])+1 || MONTH_ID.indexOf(parts[0])+1);
+    }
+  });
+  S.QUARTERS = [];
+  Object.entries(yrs).forEach(([yr, months]) => {
+    if(months.some(m=>m>=1&&m<=3)&&months.some(m=>m>=4&&m<=6)) S.QUARTERS.push({key:'Q1'+yr, label:'Q1 '+yr, type:'qtr'});
+    if(months.some(m=>m>=4&&m<=6)) S.QUARTERS.push({key:'Q2'+yr, label:'Q2 '+yr, type:'qtr'});
+    if(months.some(m=>m>=7&&m<=9)) S.QUARTERS.push({key:'Q3'+yr, label:'Q3 '+yr, type:'qtr'});
+    if(months.some(m=>m>=10&&m<=12)) S.QUARTERS.push({key:'Q4'+yr, label:'Q4 '+yr, type:'qtr'});
+  });
+  if(S.AVAILABLE_PERIODS.length) {
+    const first=S.AVAILABLE_PERIODS[0].label, last=S.AVAILABLE_PERIODS[S.AVAILABLE_PERIODS.length-1].label;
+    document.getElementById('pcached').textContent = 'Data: ' + (first===last?first:first+'–'+last);
+  }
+}
+
+let pendingPeriods = new Set();
+
+function initPeriodDropdown() {
+  pendingPeriods = new Set(S.AVAILABLE_PERIODS.map(p=>p.key));
+  renderDropdownOptions();
+  renderChips();
+}
+
+function allPeriodOpts() { return S.AVAILABLE_PERIODS.concat(S.QUARTERS); }
+
+function renderDropdownOptions() {
+  document.getElementById('ms-month-opts').innerHTML = S.AVAILABLE_PERIODS.map(p=>
+    `<label class="ms-opt${pendingPeriods.has(p.key)?' checked':''}">
+      <input type="checkbox" ${pendingPeriods.has(p.key)?'checked':''} onchange="togglePeriod('${p.key}',this.checked)">
+      <span class="ms-opt-lbl">${p.label}</span></label>`).join('');
+  document.getElementById('ms-qtr-opts').innerHTML = S.QUARTERS.map(p=>
+    `<label class="ms-opt${pendingPeriods.has(p.key)?' checked':''}">
+      <input type="checkbox" ${pendingPeriods.has(p.key)?'checked':''} onchange="togglePeriod('${p.key}',this.checked)">
+      <span class="ms-opt-lbl">${p.label}</span></label>`).join('');
+}
+
+function renderChips() {
+  const chips = document.getElementById('ms-chips');
+  if(!pendingPeriods.size){ chips.innerHTML='<span class="ms-placeholder">Pilih periode…</span>'; return; }
+  chips.innerHTML = allPeriodOpts().filter(p=>pendingPeriods.has(p.key)).map(p=>
+    `<span class="chip">${p.label}<span class="chip-x" onclick="togglePeriod('${p.key}',false);event.stopPropagation()">✕</span></span>`).join('');
+}
+
+function togglePeriod(k,c) { c?pendingPeriods.add(k):pendingPeriods.delete(k); renderDropdownOptions(); renderChips(); }
+function toggleDropdown() {
+  const dd=document.getElementById('ms-dd'),trg=document.getElementById('ms-trigger');
+  const open=!dd.classList.contains('hidden');
+  dd.classList.toggle('hidden',open); trg.classList.toggle('open',!open);
+}
+function selectAll(){ allPeriodOpts().forEach(p=>pendingPeriods.add(p.key)); renderDropdownOptions(); renderChips(); }
+function clearAll(){ pendingPeriods.clear(); renderDropdownOptions(); renderChips(); }
+document.addEventListener('click',e=>{
+  const w=document.getElementById('ms-wrap');
+  if(w&&!w.contains(e.target)){
+    document.getElementById('ms-dd').classList.add('hidden');
+    document.getElementById('ms-trigger').classList.remove('open');
+  }
+});
+
+function applyPeriods() {
+  if(!pendingPeriods.size){ showWarn('Pilih minimal satu periode.'); return; }
+  S.selPeriods = allPeriodOpts().filter(p=>pendingPeriods.has(p.key)).sort((a,b)=>a.key.localeCompare(b.key));
+  document.getElementById('ms-dd').classList.add('hidden');
+  document.getElementById('ms-trigger').classList.remove('open');
+  updateBadge();
+  renderMainChart();
+  renderPanels();
+  renderTable();
+}
+
+function updateBadge() {
+  const n=S.selPeriods.length;
+  document.getElementById('cpbadge').textContent = n===0?'–':n===1?S.selPeriods[0].label:S.selPeriods[0].label+' – '+S.selPeriods[n-1].label+' ('+n+')';
+}
+
+// ═══════════════════════════════════════
+// DATA HELPERS
+// ═══════════════════════════════════════
+function getStockVal(item) { return item.EndStockValue || item.COGMValue || 0; }
+
+// Ambil nilai field dari item, dengan fallback altField (mis. EndStockValue → COGMValue)
+function getCardItemValue(item, card) {
+  let v = item[card.field];
+  if((v == null || v === 0) && card.altField) v = item[card.altField];
+  return v || 0;
+}
+
+// Ambil nilai card dari period_data (return 0 kalau key gak ada)
+function getCardPeriodValue(periodData, card) {
+  if(!periodData) return 0;
+  return periodData[card.pdKey] || 0;
+}
+
+function buildMerged() {
+  const prefix = getTypePrefix();
+  S.merged = (RAW_DATA.merged||[]).filter(r => !prefix || (r.ItemCode||'').startsWith(prefix));
+}
+
+function getTypePrefix() {
+  const t = S.tbl.typeFilter||'all';
+  if(t==='fg') return '1';
+  if(t==='rm') return '3';
+  if(t==='pm') return '4';
+  return null;
+}
+
+// ═══════════════════════════════════════
+// ── DYNAMIC KPI GRID RENDERING ──
+// ═══════════════════════════════════════
+function renderKPIGrid() {
+  const type = S.tbl.typeFilter || 'all';
+  S.currentCards = CARD_CONFIGS[type] || CARD_CONFIGS.all;
+
+  // Reset selection — default semua card terpilih
+  S.sel = new Set(S.currentCards.map(c => c.id));
+
+  // Update grid columns class
+  const grid = document.getElementById('kpi-grid');
+  grid.classList.remove('cols-4','cols-5','cols-8');
+  const n = S.currentCards.length;
+  grid.classList.add(n>=8 ? 'cols-8' : n===5 ? 'cols-5' : 'cols-4');
+
+  // Update section label
+  const lblMap = {
+    all: 'Summary Metrics — klik card untuk toggle grafik',
+    fg:  'FG Metrics — klik card untuk toggle grafik',
+    rm:  'RM Metrics — klik card untuk toggle grafik',
+    pm:  'PM Metrics — klik card untuk toggle grafik'
+  };
+  document.getElementById('kpi-section-label').textContent = lblMap[type] || lblMap.all;
+
+  // Render cards (compact layout)
+  grid.innerHTML = S.currentCards.map(c => `
+    <div class="kpi ${c.color} sel" id="card-${c.id}" onclick="toggleCard('${c.id}')" title="Klik untuk toggle di grafik">
+      <div class="khead">
+        <span class="ki">${c.icon}</span>
+        <div class="klbl">${c.label}</div>
+      </div>
+      <div class="kval" id="v-${c.id}">–</div>
+      <div class="ksub" id="s-${c.id}"></div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
+// KPI VALUES
+// ═══════════════════════════════════════
+function renderKPI() {
+  const items = S.merged;
+  const periods = (RAW_DATA.periods||[]).join('–') || '–';
+
+  S.currentCards.forEach(card => {
+    const total = items.reduce((s, r) => s + getCardItemValue(r, card), 0);
+    const vEl = document.getElementById('v-' + card.id);
+    const sEl = document.getElementById('s-' + card.id);
+    // Compact format agar muat di card kecil; full value di tooltip
+    if(vEl) {
+      vEl.textContent = 'Rp ' + fmt.compact(total);
+      vEl.title = fmt.cur(total);
+    }
+    if(sEl) {
+      if(card.id === 'stock') {
+        sEl.innerHTML = `<span class="n">${fmt.qty(items.length)}</span> SKU`;
+      } else if(card.id === 'mps') {
+        sEl.innerHTML = `Master Prod. Sched.`;
+      } else if(card.id === 'mrp') {
+        sEl.innerHTML = `OSPR + OSPO`;
+      } else {
+        sEl.innerHTML = periods === '–' ? '&nbsp;' : periods;
+      }
+    }
+  });
+}
+
+function toggleCard(id) {
+  if(S.sel.has(id)){ if(S.sel.size===1) return; S.sel.delete(id); }
+  else S.sel.add(id);
+  const el = document.getElementById('card-'+id);
+  if(el) el.classList.toggle('sel', S.sel.has(id));
+  renderMainChart();
+}
+
+// ═══════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════
+Chart.defaults.color = '#64748B';
+Chart.defaults.borderColor = '#E2E8F0';
+Chart.defaults.font.family = "'DM Sans'";
+const DP = ['#2563EB','#7C3AED','#059669','#D97706','#DC2626','#0D9488','#DB2777','#65A30D','#475569'];
+
+function dchart(id){
+  const c=document.getElementById(id); if(!c)return null;
+  const ex=Chart.getChart(c); if(ex)ex.destroy();
+  return c;
+}
+
+function renderMainChart() {
+  const canvas=document.getElementById('mchart'), noMsg=document.getElementById('no-data-msg');
+  if(!S.selPeriods.length){ canvas.style.display='none'; if(noMsg)noMsg.classList.remove('hidden'); return; }
+  if(noMsg)noMsg.classList.add('hidden');
+  canvas.style.display='block';
+
+  const periodData = RAW_DATA.period_data || {};
+  const labels = S.selPeriods.map(p=>p.label);
+  // Hanya tampilkan card yang aktif (di S.sel) DAN ada di currentCards
+  const activeCards = S.currentCards.filter(c => S.sel.has(c.id));
+
+  const datasets = activeCards.map(c => {
+    const data = S.selPeriods.map(p => {
+      const pd = periodData[p.label] || {};
+      return getCardPeriodValue(pd, c);
+    });
+    return {
+      label: c.chartLabel,
+      data: data,
+      backgroundColor: c.chartColor + '22',
+      borderColor: c.chartColor,
+      borderWidth: 2,
+      borderRadius: 5,
+      borderSkipped: false
+    };
+  });
+
+  const cv=dchart('mchart'); if(!cv)return;
+  new Chart(cv,{type:'bar',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:450},
+    plugins:{
+      legend:{display:activeCards.length>1,position:'top',labels:{boxWidth:12,font:{size:11}}},
+      tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmt.cur(ctx.parsed.y)}}
+    },
+    scales:{
+      x:{grid:{color:'#F1F5F9'},ticks:{font:{size:11}}},
+      y:{grid:{color:'#F1F5F9'},ticks:{font:{family:"'DM Mono'",size:10},callback:v=>fmt.ax(v)}}
+    }
+  }});
+}
+
+function donut(id,labels,vals) {
+  const c=dchart(id); if(!c)return;
+  new Chart(c,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:DP.slice(0,labels.length),borderColor:'#fff',borderWidth:2}]},
+    options:{cutout:'65%',responsive:true,maintainAspectRatio:true,animation:{duration:500},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        const t=ctx.dataset.data.reduce((a,b)=>a+b,0);
+        return ` ${ctx.label}: ${fmt.compact(ctx.parsed)} (${t?(ctx.parsed/t*100).toFixed(1):0}%)`;
+      }}}}}});
+}
+
+function renderPanels() {
+  const items = S.merged; if(!items.length)return;
+  // Category
+  const cG={};
+  items.forEach(r=>{const cat=r.Category||r.Group||'?';if(!cG[cat])cG[cat]=0;cG[cat]+=getStockVal(r);});
+  const cE=Object.entries(cG).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const cL=cE.map(e=>e[0]),cV=cE.map(e=>e[1]),cT=cV.reduce((a,b)=>a+b,0);
+  donut('ch-cat',cL,cV);
+  document.getElementById('p-cat').querySelector('.tw').innerHTML=
+    `<table class="ct"><thead><tr><th>Category</th><th>Value</th><th>%</th></tr></thead><tbody>${
+      cL.map((l,i)=>`<tr><td>${l||'–'}</td><td class="r">${fmt.compact(cV[i])}</td><td class="p">${cT?fmt.pct(cV[i]/cT*100):'–'}</td></tr>`).join('')
+    }</tbody></table>`;
+  // Group
+  const gE=Object.entries(items.reduce((m,r)=>{const g=r.Group||'?';if(!m[g])m[g]=0;m[g]+=getStockVal(r);return m;},{})).sort((a,b)=>b[1]-a[1]);
+  const g8=gE.slice(0,8),gOth=gE.slice(8).reduce((s,e)=>s+e[1],0);if(gOth>0)g8.push(['Others',gOth]);
+  const gL=g8.map(e=>e[0]),gV=g8.map(e=>e[1]),gT=gV.reduce((a,b)=>a+b,0);
+  donut('ch-grp',gL,gV);
+  document.getElementById('p-grp').querySelector('.tw').innerHTML=
+    `<table class="ct"><thead><tr><th>Group</th><th>Value</th><th>%</th></tr></thead><tbody>${
+      gL.map((l,i)=>`<tr><td>${gL[i]}</td><td class="r">${fmt.compact(gV[i])}</td><td class="p">${gT?fmt.pct(gV[i]/gT*100):'–'}</td></tr>`).join('')
+    }</tbody></table>`;
+  // ABC
+  const aG={};
+  items.forEach(r=>{const a=(r.ABCClass||'N/A').toString().trim().toUpperCase();if(!aG[a])aG[a]={c:0,v:0};aG[a].c++;aG[a].v+=getStockVal(r);});
+  const aL=Object.keys(aG).sort(),aV=aL.map(l=>aG[l].v),aT=aV.reduce((a,b)=>a+b,0);
+  donut('ch-abc',aL,aV);
+  document.getElementById('p-abc').querySelector('.tw').innerHTML=
+    `<table class="ct"><thead><tr><th>Class</th><th>SKU</th><th>Value</th><th>%</th></tr></thead><tbody>${
+      aL.map((l,i)=>`<tr><td><span class="badge b${(l||'n').toLowerCase()}">${l}</span></td><td class="r">${aG[l].c}</td><td class="r">${fmt.compact(aV[i])}</td><td class="p">${aT?fmt.pct(aV[i]/aT*100):'–'}</td></tr>`).join('')
+    }</tbody></table>`;
+  // Bracket
+  const bk={'Low (<10K)':{c:0,v:0},'Mid (10–100K)':{c:0,v:0},'High (>100K)':{c:0,v:0}};
+  items.forEach(r=>{
+    const qty=r.EndStockQty||1, val=getStockVal(r); if(!val)return;
+    const vpu=val/qty, k=vpu<10000?'Low (<10K)':vpu<=100000?'Mid (10–100K)':'High (>100K)';
+    bk[k].c++;bk[k].v+=val;
+  });
+  const bL=Object.keys(bk),bV=bL.map(l=>bk[l].v),bT=bV.reduce((a,b)=>a+b,0);
+  donut('ch-brk',bL,bV);
+  document.getElementById('p-brk').querySelector('.tw').innerHTML=
+    `<table class="ct"><thead><tr><th>Bracket</th><th>SKU</th><th>Val</th><th>%</th></tr></thead><tbody>${
+      bL.map((l,i)=>`<tr><td>${l}</td><td class="r">${bk[l].c}</td><td class="r">${fmt.compact(bV[i])}</td><td class="p">${bT?fmt.pct(bV[i]/bT*100):'–'}</td></tr>`).join('')
+    }</tbody></table>`;
+  // Top 10
+  const t10=[...S.merged].sort((a,b)=>(getStockVal(b)||0)-(getStockVal(a)||0)).slice(0,10);
+  const tc=dchart('ch-top'); if(!tc)return;
+  new Chart(tc,{type:'bar',data:{
+    labels:t10.map(r=>{const n=(r.ItemName||r.ItemCode||'').toString();return n.length>22?n.slice(0,20)+'…':n;}),
+    datasets:[{label:'Stock Value',data:t10.map(r=>getStockVal(r)||0),backgroundColor:DP.map(c=>c+'33'),borderColor:DP,borderWidth:2,borderRadius:5}]
+  },options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:500},
+    onClick:(evt,els)=>{if(els.length)showModal(t10[els[0].index]);},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt.cur(ctx.parsed.y)}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'#F1F5F9'},ticks:{font:{family:"'DM Mono'",size:10},callback:v=>fmt.ax(v)}}}
+  }});
+}
+
+// ═══════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════
+let masterColsHidden=false;
+function toggleMasterCols(){
+  masterColsHidden=!masterColsHidden;
+  document.getElementById('tbl-combined').classList.toggle('hide-mc',masterColsHidden);
+  document.getElementById('btn-toggle-master').textContent=masterColsHidden?'👁 Tampilkan Detail':'🙈 Sembunyikan Detail';
+}
+
+function renderTable() {
+  const {query,sortCol,sortDir}=S.tbl;
+  let rows=[...S.merged];
+  if(query){const q=query.toLowerCase();rows=rows.filter(r=>(r.ItemCode||'').toLowerCase().includes(q)||(r.ItemName||'').toLowerCase().includes(q));}
+  if(sortCol){rows.sort((a,b)=>{
+    let av=a[sortCol],bv=b[sortCol];
+    if(typeof av==='number')return sortDir==='asc'?av-bv:bv-av;
+    av=(av||'').toString().toLowerCase();bv=(bv||'').toString().toLowerCase();
+    return sortDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+  });}
+  S.filtered=rows;
+  const total=rows.length,pages=Math.ceil(total/S.PAGE)||1;
+  if(S.tbl.page>pages)S.tbl.page=1;
+  const st=(S.tbl.page-1)*S.PAGE,sl=rows.slice(st,st+S.PAGE);
+  const body=document.getElementById('tbody');
+  if(!sl.length){body.innerHTML=`<tr><td colspan="11" style="padding:30px;text-align:center;color:var(--tm)">Tidak ada data</td></tr>`;return;}
+  body.innerHTML=sl.map(r=>{
+    const abc=r.ABCClass||'',sv=getStockVal(r);
+    return `<tr class="${abc==='A'?'ra':abc==='B'?'rb':''}">
+      <td class="mo">${r.ItemCode||'–'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(r.ItemName||'').replace(/"/g,'&quot;')}">${r.ItemName||'–'}</td>
+      <td class="mc">${r.Category||r.Group||'–'}</td>
+      <td class="mc">${r.Group||'–'}</td>
+      <td><span class="badge b${(abc||'n').toLowerCase()}">${abc||'–'}</span></td>
+      <td class="uom-d">${r.UoM||'–'}</td>
+      <td class="mo">${fmt.qty(r.EndStockQty||0)}</td>
+      <td class="mo">${fmt.compact(sv)}</td>
+      <td class="mo">${fmt.compact(r.MatConsValue||0)}</td>
+      <td class="mo">${fmt.compact(r.MRPValue||0)}</td>
+      <td class="mo">${fmt.compact(r.GRPOValue||0)}</td>
+    </tr>`;
+  }).join('');
+  document.querySelectorAll('.dt th[onclick]').forEach(th=>{
+    const m=th.getAttribute('onclick').match(/'([^']+)'/);
+    if(m){th.classList.remove('s-a','s-d');if(m[1]===sortCol)th.classList.add('s-'+(sortDir==='asc'?'a':'d'));}
+  });
+  const periods=(RAW_DATA.periods||[]).join('–')||'–';
+  const note=document.getElementById('tbl-period-note');
+  if(note)note.textContent='Data periode: '+periods;
+  renderPagi(total,pages);
+}
+
+function renderPagi(t,pages){
+  const p=S.tbl.page,st=(p-1)*S.PAGE+1,en=Math.min(p*S.PAGE,t);
+  let h=`<div class="pinfo">${fmt.qty(st)}–${fmt.qty(en)} dari ${fmt.qty(t)}</div>`;
+  h+=`<button class="bpg" onclick="gp(${p-1})" ${p<=1?'disabled':''}>‹</button>`;
+  for(let i=Math.max(1,p-3);i<=Math.min(pages,p+3);i++)h+=`<button class="bpg${i===p?' ap':''}" onclick="gp(${i})">${i}</button>`;
+  h+=`<button class="bpg" onclick="gp(${p+1})" ${p>=pages?'disabled':''}>›</button>`;
+  document.getElementById('pagi').innerHTML=h;
+}
+function gp(p){S.tbl.page=p;renderTable();}
+function sortTbl(c){S.tbl.sortDir=S.tbl.sortCol===c?(S.tbl.sortDir==='asc'?'desc':'asc'):'desc';S.tbl.sortCol=c;S.tbl.page=1;renderTable();}
+function debounceSearch(){clearTimeout(S.dbt);S.dbt=setTimeout(()=>{S.tbl.query=document.getElementById('tsearch').value;S.tbl.page=1;renderTable();},300);}
+
+// ═══════════════════════════════════════
+// TYPE FILTER
+// ═══════════════════════════════════════
+function setTypeFilter(t){
+  S.tbl.typeFilter = t; S.tbl.page = 1;
+  ['all','fg','rm','pm'].forEach(k=>{
+    const b=document.getElementById('tp-'+k);
+    if(b) b.classList.toggle('active', k===t);
+  });
+  const labels={all:'',fg:'Menampilkan FG (item awalan 1)',rm:'Menampilkan RM (item awalan 3)',pm:'Menampilkan PM (item awalan 4)'};
+  const note=document.getElementById('type-filter-note');
+  if(note) note.textContent = labels[t] || '';
+
+  buildMerged();
+  renderKPIGrid();        // ← rebuild cards sesuai type
+  renderKPI();
+  renderMainChart();
+  renderPanels();
+  renderTable();
+  updatePillCounts();
+}
+
+function updatePillCounts(){
+  if(!RAW_DATA) return;
+  const all=RAW_DATA.merged||[];
+  const counts={fg:0,rm:0,pm:0};
+  all.forEach(r=>{const p=(r.ItemCode||'').charAt(0);if(p==='1')counts.fg++;else if(p==='3')counts.rm++;else if(p==='4')counts.pm++;});
+  counts.all=counts.fg+counts.rm+counts.pm;
+  ['all','fg','rm','pm'].forEach(k=>{const e=document.getElementById('tpc-'+k);if(e)e.textContent='('+counts[k]+')';});
+}
+
+// ═══════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════
+function showModal(item){
+  const sv=getStockVal(item);
+  document.getElementById('mttl').textContent=item.ItemCode+' — '+(item.ItemName||'');
+  document.getElementById('mbody').innerHTML=[
+    ['Category',item.Category||item.Group||'–'],['Group',item.Group||'–'],['ABC',item.ABCClass||'–'],
+    ['UoM',item.UoM||'–'],['Stock Qty',fmt.qty(item.EndStockQty||0)],['Stock Val',fmt.cur(sv)],
+    ['Cons Value',fmt.cur(item.MatConsValue||0)],['MRP Value',fmt.cur(item.MRPValue||0)],
+    ['GRPO Value',fmt.cur(item.GRPOValue||0)],['OSPR Val',fmt.cur(item.OSPRValue||0)],['OSPO Val',fmt.cur(item.OSPOValue||0)],
+  ].map(([l,v])=>`<div class="mi"><div class="milbl">${l}</div><div class="mival">${v}</div></div>`).join('');
+  document.getElementById('mov').classList.add('open');
+}
+function closeModal(e){if(e.target.id==='mov')document.getElementById('mov').classList.remove('open');}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+function exportCSV(){
+  const rows=S.filtered.length?S.filtered:S.merged;
+  const hd=['ItemCode','ItemName','Category','Group','ABCClass','UoM','EndStockQty','EndStockValue','MatConsValue','MRPValue','GRPOValue'];
+  const csv=[hd.join(','),...rows.map(r=>hd.map(h=>{const v=r[h]!=null?r[h].toString():'';return v.includes(',')||v.includes('"')?'"'+v.replace(/"/g,'""')+'"':v;}).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='inventory-eji-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+// ═══════════════════════════════════════
+// TABS / BANNERS / UI HELPERS
+// ═══════════════════════════════════════
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  document.getElementById('tab-dash').classList.toggle('active',t==='dash');
+  document.getElementById('tab-raw').classList.toggle('active',t==='raw');
+}
+function showOverlay(v){ document.getElementById('loading-overlay').style.display = v?'flex':'none'; }
+function setLoSub(m){ const el=document.getElementById('lo-sub'); if(el)el.textContent=m; }
+function showWarn(m){ document.getElementById('warn-msg').textContent=m; document.getElementById('b-warn').style.display='flex'; }
+function showErr(m){  document.getElementById('err-msg').textContent=m;  document.getElementById('b-err').style.display='flex'; }
+function showOk(m){   document.getElementById('ok-msg').textContent=m;   document.getElementById('b-ok').style.display='flex'; }
+function closeBanner(id){ document.getElementById(id).style.display='none'; }
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => { loadData(); });
+</script>
+</body>
+</html>
